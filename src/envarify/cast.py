@@ -1,6 +1,6 @@
 """Helpers for casting from environment variable string to other types."""
 
-from typing import Callable, TypeVar, Union, Generic
+from typing import Callable, Generic, TypeVar, Union
 
 __all__ = ["get_caster", "EnvvarCaster"]
 

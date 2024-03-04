@@ -1,4 +1,8 @@
-"""Envarify implementation."""
+"""Envarify implementation.
+
+TODO:
+ - cache _annotations and _properties
+"""
 
 from __future__ import annotations
 
@@ -7,14 +11,9 @@ from dataclasses import dataclass
 from typing import Any, Iterator
 
 from .cast import EnvvarCaster, get_caster
+from .errors import AnnotationError, MissingEnvvarError
 
-__all__ = ["BaseConfig", "Envvar", "MissingEnvvarError"]
-
-
-class MissingEnvvarError(Exception):
-    """Missing environment variables error."""
-
-    pass
+__all__ = ["BaseConfig", "Envvar", "MissingEnvvarError", "AnnotationError", "MissingEnvvarError"]
 
 
 @dataclass(frozen=True)
@@ -55,11 +54,11 @@ class BaseConfig:
     """Base config class."""
 
     def __init__(self, **kwargs) -> None:
-        """Initialize this object."""  # TODO
-        for key in self.__annotations__:
-            if key not in kwargs:
-                raise TypeError(key)
-            setattr(self, key, kwargs[key])
+        """Initialize this object."""
+        for key, value in kwargs.items():
+            if key not in self._properties():
+                raise TypeError(f"Unexpected keyword argument '{key}'")
+            setattr(self, key, value)
 
     def __repr__(self) -> str:
         """Return representation."""
@@ -67,36 +66,64 @@ class BaseConfig:
             name=self.__class__.__name__,
             attributes=", ".join(
                 "{key}={value}".format(key=key, value=getattr(self, key))
-                for key in self.__annotations__
+                for key in self._annotations()
             ),
         )
 
     @classmethod
     def fromenv(cls) -> BaseConfig:
-        """Initialize this object from environment variables."""
+        """Initialize this object from environment variables.
+
+        Returns:
+            BaseConfig
+
+        Raises:
+            AnnotationError - if subclass' annotation are not valid
+            MissingEnvvarError - if required environment variables are not set
+            ValueError - if environment variables values cannot be parsed into specified type
+        """
         cls._validate()
         return cls(**{v.attr: v.value() for v in cls._envvars()})
 
     @classmethod
     def _validate(cls) -> None:
-        """Validate environment variables."""
-        missing_envvars = [e.name for e in cls._envvars() if not e.has_value()]
+        """Run validations required to initialize from env vars."""
+        not_annotated = [key for key in cls._properties() if key not in cls._annotations()]
+        if not_annotated:
+            raise AnnotationError(
+                "Missing type annotatations in the following properties: "
+                + ", ".join(not_annotated)
+            )
 
+        missing_envvars = [e.name for e in cls._envvars() if not e.has_value()]
         if missing_envvars:
             raise MissingEnvvarError(", ".join(missing_envvars))
 
     @classmethod
+    def _properties(cls):
+        """Get dictionary containg class properties."""
+        return {k: v for k, v in cls.__dict__.items() if not k.startswith("__")}
+
+    @classmethod
+    def _annotations(cls):
+        """Get dictionary containg class properties."""
+        if not hasattr(cls, "__annotations__"):
+            raise AnnotationError("Subclass must have annotated properties")
+
+        return cls.__annotations__
+
+    @classmethod
     def _envvars(cls) -> Iterator[_Envvar]:
         """Yield over all environment variables."""
-        for key, type_ in cls.__annotations__.items():
-            spec: Envvar | None = cls.__dict__.get(key)
+        for key, type_ in cls._annotations().items():
+            spec: Envvar | None = cls._properties().get(key)
 
             if isinstance(spec, Envvar):
                 yield _Envvar(
                     attr=key,
                     name=spec.name or key,
                     default=spec.default,
-                    cast=get_caster(type_),
+                    cast=spec.cast or get_caster(type_),
                 )
             elif spec is None:
                 yield _Envvar(
@@ -104,5 +131,3 @@ class BaseConfig:
                     name=key,
                     cast=get_caster(type_),
                 )
-            else:
-                raise TypeError(spec)
