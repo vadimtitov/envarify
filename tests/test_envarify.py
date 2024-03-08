@@ -1,3 +1,4 @@
+from typing import Optional, Union
 from unittest.mock import patch
 
 import pytest
@@ -28,6 +29,20 @@ def test_simple_case():
     assert config.test_float == 3.14
     assert config.test_str == "Hello"
     assert config.test_bool == True
+
+
+@patch.dict(envarify.os.environ, {"XXX": "666"})
+def test_nullable_arguments():
+
+    class MyConfig(BaseConfig):
+        test_opt: Optional[int] = EnvVar("XXX")
+        test_union: Union[float, None] = EnvVar("XXX")
+        test_default: Optional[int] = EnvVar(default=45)
+
+    config = MyConfig.fromenv()
+    assert config.test_opt == 666
+    assert config.test_union == 666.0
+    assert config.test_default == 45
 
 
 def test_missing_envvar_error_raised():

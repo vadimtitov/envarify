@@ -1,8 +1,16 @@
 """Helpers for casting from environment variable string to other types."""
 
-from typing import Callable, Generic, TypeVar, Union
+import sys
+from typing import Callable, Generic, Optional, Type, TypeVar, Union, get_args, get_origin
 
 from .errors import UnsupportedTypeError
+
+if sys.version_info >= (3, 10):
+    from types import NoneType, UnionType
+else:
+    NoneType = type(None)
+    UnionType = Union
+
 
 __all__ = ["get_caster", "EnvVarCaster"]
 
@@ -26,7 +34,7 @@ def _str_to_bool(value: str) -> bool:
 
 EnvVarCaster = Callable[[str], T]
 
-_CASTERS: dict[T, EnvVarCaster] = {
+_PRIMITIVES_CASTERS: dict[T, EnvVarCaster] = {
     int: int,
     float: float,
     str: str,
@@ -36,8 +44,31 @@ _CASTERS: dict[T, EnvVarCaster] = {
 
 def get_caster(type_: T) -> EnvVarCaster:
     """Get caster for a given type."""
-    caster = _CASTERS.get(type_)
+    if _is_single_nullable(type_):
+        type_ = _reduce_from_nullable(type_)
+
+    caster = _PRIMITIVES_CASTERS.get(type_)
     if caster is None:
         raise UnsupportedTypeError(type_)
 
     return caster
+
+
+def _is_single_nullable(tp: Type) -> bool:
+    origin_type = get_origin(tp)
+    is_union = origin_type is UnionType or origin_type is Union
+
+    if not is_union:
+        return False
+
+    type_args = get_args(tp)
+    return len(type_args) == 2 and NoneType in type_args
+
+
+def _reduce_from_nullable(tp: Type):
+    type_args = get_args(tp)
+
+    if type_args[0] is NoneType:
+        return type_args[1]
+    elif type_args[1] is NoneType:
+        return type_args[0]
