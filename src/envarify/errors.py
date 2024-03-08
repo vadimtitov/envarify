@@ -1,7 +1,7 @@
 """Host package errors."""
 
 
-class MissingEnvvarError(Exception):
+class MissingEnvVarError(Exception):
     """Missing environment variables error."""
 
 

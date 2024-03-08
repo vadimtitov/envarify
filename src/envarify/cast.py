@@ -2,7 +2,7 @@
 
 from typing import Callable, Generic, TypeVar, Union
 
-__all__ = ["get_caster", "EnvvarCaster"]
+__all__ = ["get_caster", "EnvVarCaster"]
 
 T = TypeVar("T", bound=Union[int, float, str, bool])
 
@@ -22,9 +22,9 @@ def _str_to_bool(value: str) -> bool:
     raise ValueError(value)
 
 
-EnvvarCaster = Callable[[str], T]
+EnvVarCaster = Callable[[str], T]
 
-_CASTERS: dict[T, EnvvarCaster] = {
+_CASTERS: dict[T, EnvVarCaster] = {
     int: int,
     float: float,
     str: str,
@@ -32,6 +32,6 @@ _CASTERS: dict[T, EnvvarCaster] = {
 }
 
 
-def get_caster(type_: T) -> EnvvarCaster:
+def get_caster(type_: T) -> EnvVarCaster:
     """Get caster for a given type."""
     return _CASTERS[type_]

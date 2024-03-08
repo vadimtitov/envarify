@@ -3,7 +3,7 @@ from unittest.mock import patch
 import pytest
 
 import envarify
-from envarify import BaseConfig, Envvar, MissingEnvvarError
+from envarify import BaseConfig, EnvVar, MissingEnvVarError
 
 
 @patch.dict(
@@ -18,10 +18,10 @@ from envarify import BaseConfig, Envvar, MissingEnvvarError
 def test_simple_case():
 
     class MyConfig(BaseConfig):
-        test_int: int = Envvar("TEST_INT")
-        test_float: float = Envvar("TEST_FLOAT")
-        test_str: str = Envvar("TEST_STR")
-        test_bool: bool = Envvar("TEST_BOOL")
+        test_int: int = EnvVar("TEST_INT")
+        test_float: float = EnvVar("TEST_FLOAT")
+        test_str: str = EnvVar("TEST_STR")
+        test_bool: bool = EnvVar("TEST_BOOL")
 
     config = MyConfig.fromenv()
     assert config.test_int == 666
@@ -32,7 +32,7 @@ def test_simple_case():
 
 def test_missing_envvar_error_raised():
     class MyConfig(BaseConfig):
-        x: int = Envvar("SOME_NOT_EXISTING_ENVVAR")
+        x: int = EnvVar("SOME_NOT_EXISTING_ENVVAR")
 
-    with pytest.raises(MissingEnvvarError):
+    with pytest.raises(MissingEnvVarError):
         MyConfig.fromenv()

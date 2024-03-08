@@ -12,12 +12,12 @@ export ENABLE_FEATURE=true
 ```
 We can create a config object in Python:
 ```python
-from envarify import BaseModel, Envvar
+from envarify import BaseModel, EnvVar
 
 class MyConfig(BaseModel):
-    timeout_s: float = Envvar("TIMEOUT_S")
-    api_key: str = Envvar("API_KEY")
-    enable_feature = Envvar("ENABLE_FEATURE", default=False)
+    timeout_s: float = EnvVar("TIMEOUT_S")
+    api_key: str = EnvVar("API_KEY")
+    enable_feature = EnvVar("ENABLE_FEATURE", default=False)
 
 config = MyConfig.fromenv()
 print(config)

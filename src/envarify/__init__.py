@@ -10,28 +10,28 @@ import os
 from dataclasses import dataclass
 from typing import Any, Iterator
 
-from .cast import EnvvarCaster, get_caster
-from .errors import AnnotationError, MissingEnvvarError
+from .cast import EnvVarCaster, get_caster
+from .errors import AnnotationError, MissingEnvVarError
 
-__all__ = ["BaseConfig", "Envvar", "MissingEnvvarError", "AnnotationError", "MissingEnvvarError"]
+__all__ = ["BaseConfig", "EnvVar", "MissingEnvVarError", "AnnotationError", "MissingEnvVarError"]
 
 
 @dataclass(frozen=True)
-class Envvar:
+class EnvVar:
     """Environment variable spec for package API."""
 
     name: str | None = None
     default: str | None = None
-    cast: EnvvarCaster | None = None
+    cast: EnvVarCaster | None = None
 
 
 @dataclass(frozen=True)
-class _Envvar:
+class _EnvVar:
     """Environment variable representation."""
 
     attr: str
     name: str
-    cast: EnvvarCaster
+    cast: EnvVarCaster
     default: str | None = None
 
     def exists(self) -> bool:
@@ -79,7 +79,7 @@ class BaseConfig:
 
         Raises:
             AnnotationError - if subclass' annotation are not valid
-            MissingEnvvarError - if required environment variables are not set
+            MissingEnvVarError - if required environment variables are not set
             ValueError - if environment variables values cannot be parsed into specified type
         """
         cls._validate()
@@ -97,7 +97,7 @@ class BaseConfig:
 
         missing_envvars = [e.name for e in cls._envvars() if not e.has_value()]
         if missing_envvars:
-            raise MissingEnvvarError(", ".join(missing_envvars))
+            raise MissingEnvVarError(", ".join(missing_envvars))
 
     @classmethod
     def _properties(cls):
@@ -113,20 +113,20 @@ class BaseConfig:
         return cls.__annotations__
 
     @classmethod
-    def _envvars(cls) -> Iterator[_Envvar]:
+    def _envvars(cls) -> Iterator[_EnvVar]:
         """Yield over all environment variables."""
         for key, type_ in cls._annotations().items():
-            spec: Envvar | None = cls._properties().get(key)
+            spec: EnvVar | None = cls._properties().get(key)
 
-            if isinstance(spec, Envvar):
-                yield _Envvar(
+            if isinstance(spec, EnvVar):
+                yield _EnvVar(
                     attr=key,
                     name=spec.name or key,
                     default=spec.default,
                     cast=spec.cast or get_caster(type_),
                 )
             elif spec is None:
-                yield _Envvar(
+                yield _EnvVar(
                     attr=key,
                     name=key,
                     cast=get_caster(type_),
