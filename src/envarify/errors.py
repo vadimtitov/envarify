@@ -1,9 +1,17 @@
 """Host package errors."""
 
 
-class MissingEnvVarError(Exception):
+class EnvarifyError(Exception):
+    """Base module exception."""
+
+
+class MissingEnvVarError(EnvarifyError):
     """Missing environment variables error."""
 
 
-class AnnotationError(Exception):
+class AnnotationError(EnvarifyError):
     """Annotation error."""
+
+
+class UnsupportedTypeError(EnvarifyError):
+    """Unsupported type exception."""

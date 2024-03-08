@@ -11,9 +11,17 @@ from dataclasses import dataclass
 from typing import Any, Iterator
 
 from .cast import EnvVarCaster, get_caster
-from .errors import AnnotationError, MissingEnvVarError
+from .errors import AnnotationError, EnvarifyError, MissingEnvVarError, UnsupportedTypeError
 
-__all__ = ["BaseConfig", "EnvVar", "MissingEnvVarError", "AnnotationError", "MissingEnvVarError"]
+__all__ = [
+    "BaseConfig",
+    "EnvVar",
+    "MissingEnvVarError",
+    "AnnotationError",
+    "MissingEnvVarError",
+    "UnsupportedTypeError",
+    "EnvarifyError",
+]
 
 
 @dataclass(frozen=True)

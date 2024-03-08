@@ -2,6 +2,8 @@
 
 from typing import Callable, Generic, TypeVar, Union
 
+from .errors import UnsupportedTypeError
+
 __all__ = ["get_caster", "EnvVarCaster"]
 
 T = TypeVar("T", bound=Union[int, float, str, bool])
@@ -34,4 +36,8 @@ _CASTERS: dict[T, EnvVarCaster] = {
 
 def get_caster(type_: T) -> EnvVarCaster:
     """Get caster for a given type."""
-    return _CASTERS[type_]
+    caster = _CASTERS.get(type_)
+    if caster is None:
+        raise UnsupportedTypeError(type_)
+
+    return caster
