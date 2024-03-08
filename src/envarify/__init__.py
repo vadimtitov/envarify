@@ -1,14 +1,11 @@
-"""Envarify implementation.
-
-TODO:
- - cache _annotations and _properties
-"""
+"""Envarify implementation."""
 
 from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from typing import Any, Iterator
+from functools import cache
+from typing import Any
 
 from .cast import EnvVarCaster, get_caster
 from .errors import AnnotationError, EnvarifyError, MissingEnvVarError, UnsupportedTypeError
@@ -108,6 +105,7 @@ class BaseConfig:
             raise MissingEnvVarError(", ".join(missing_envvars))
 
     @classmethod
+    @cache
     def _properties(cls):
         """Get dictionary containg class properties."""
         return {k: v for k, v in cls.__dict__.items() if not k.startswith("__")}
@@ -121,21 +119,27 @@ class BaseConfig:
         return cls.__annotations__
 
     @classmethod
-    def _envvars(cls) -> Iterator[_EnvVar]:
+    @cache
+    def _envvars(cls) -> list[_EnvVar]:
         """Yield over all environment variables."""
+        envvars = []
         for key, type_ in cls._annotations().items():
             spec: EnvVar | None = cls._properties().get(key)
-
             if isinstance(spec, EnvVar):
-                yield _EnvVar(
-                    attr=key,
-                    name=spec.name or key,
-                    default=spec.default,
-                    cast=spec.cast or get_caster(type_),
+                envvars.append(
+                    _EnvVar(
+                        attr=key,
+                        name=spec.name or key,
+                        default=spec.default,
+                        cast=spec.cast or get_caster(type_),
+                    )
                 )
             elif spec is None:
-                yield _EnvVar(
-                    attr=key,
-                    name=key,
-                    cast=get_caster(type_),
+                envvars.append(
+                    _EnvVar(
+                        attr=key,
+                        name=key,
+                        cast=get_caster(type_),
+                    )
                 )
+        return envvars
