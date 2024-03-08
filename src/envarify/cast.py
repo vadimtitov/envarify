@@ -1,7 +1,9 @@
 """Helpers for casting from environment variable string to other types."""
 
+from __future__ import annotations
+
 import sys
-from typing import Callable, Generic, Optional, Type, TypeVar, Union, get_args, get_origin
+from typing import Callable, Type, TypeVar, Union, get_args, get_origin
 
 from .errors import UnsupportedTypeError
 

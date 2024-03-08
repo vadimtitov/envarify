@@ -8,7 +8,7 @@ from envarify import BaseConfig, EnvVar, MissingEnvVarError, UnsupportedTypeErro
 
 
 @patch.dict(
-    envarify.os.environ,
+    envarify.envarify.os.environ,
     {
         "TEST_INT": "666",
         "TEST_FLOAT": "3.14",
@@ -31,7 +31,7 @@ def test_simple_case():
     assert config.test_bool == True
 
 
-@patch.dict(envarify.os.environ, {"XXX": "666"})
+@patch.dict(envarify.envarify.os.environ, {"XXX": "666"})
 def test_nullable_arguments():
 
     class MyConfig(BaseConfig):
