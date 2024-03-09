@@ -8,7 +8,7 @@ from functools import cache
 from typing import Any
 
 from .cast import EnvVarCaster, get_caster
-from .errors import AnnotationError, MissingEnvVarError
+from .errors import AnnotationError, MissingEnvVarsError
 
 
 @dataclass(frozen=True)
@@ -49,7 +49,7 @@ class BaseConfig:
 
         Raises:
             AnnotationError - if subclass' annotation are not valid
-            MissingEnvVarError - if required environment variables are not set
+            MissingEnvVarsError - if required environment variables are not set
             ValueError - if environment variables values cannot be parsed into specified type
         """
         cls._validate()
@@ -67,7 +67,7 @@ class BaseConfig:
 
         missing_envvars = [e.name for e in cls._envvars() if not e.has_value()]
         if missing_envvars:
-            raise MissingEnvVarError(", ".join(missing_envvars))
+            raise MissingEnvVarsError(", ".join(missing_envvars))
 
     @classmethod
     @cache

@@ -5,7 +5,7 @@ class EnvarifyError(Exception):
     """Base module exception."""
 
 
-class MissingEnvVarError(EnvarifyError):
+class MissingEnvVarsError(EnvarifyError):
     """Missing environment variables error."""
 
 

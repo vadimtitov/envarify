@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 
 import envarify
-from envarify import BaseConfig, EnvVar, MissingEnvVarError, UnsupportedTypeError
+from envarify import BaseConfig, EnvVar, MissingEnvVarsError, UnsupportedTypeError
 
 
 @patch.dict(
@@ -49,7 +49,7 @@ def test_missing_envvar_error_raised():
     class MyConfig(BaseConfig):
         x: int = EnvVar("SOME_NOT_EXISTING_ENVVAR")
 
-    with pytest.raises(MissingEnvVarError):
+    with pytest.raises(MissingEnvVarsError):
         MyConfig.fromenv()
 
 
