@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import sys
-from typing import Callable, Type, TypeVar, Union, get_args, get_origin
+from typing import Callable, Type, Union, get_args, get_origin
 
 from .errors import UnsupportedTypeError
 
@@ -16,7 +16,7 @@ else:
 
 __all__ = ["get_caster", "EnvVarCaster"]
 
-T = TypeVar("T", bound=Union[int, float, str, bool])
+SupportedType = Union[int, float, str, bool]
 
 _TRUE_VALUES = {"true", "yes", "on", "y", "1"}
 _FALSE_VALUES = {"false", "no", "off", "n", "0"}
@@ -34,9 +34,9 @@ def _str_to_bool(value: str) -> bool:
     raise ValueError(value)
 
 
-EnvVarCaster = Callable[[str], T]
+EnvVarCaster = Callable[[str], SupportedType]
 
-_PRIMITIVES_CASTERS: dict[T, EnvVarCaster] = {
+_PRIMITIVES_CASTERS: dict[Type[SupportedType], EnvVarCaster] = {
     int: int,
     float: float,
     str: str,
@@ -44,7 +44,7 @@ _PRIMITIVES_CASTERS: dict[T, EnvVarCaster] = {
 }
 
 
-def get_caster(type_: T) -> EnvVarCaster:
+def get_caster(type_: Type) -> EnvVarCaster:
     """Get caster for a given type."""
     if _is_single_nullable(type_):
         type_ = _reduce_from_nullable(type_)
