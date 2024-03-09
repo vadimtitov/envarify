@@ -8,11 +8,13 @@ from setuptools import setup
 
 def _get_release_version() -> str:
     """Get git release tag version."""
-    return (
+    version = (
         subprocess.run(["git", "describe", "--tags"], stdout=subprocess.PIPE)
         .stdout.decode("utf-8")
         .strip()
-    ) or "0-dev"
+    ) or "0.0.0"
+    print("Release version: ", version)
+    return version
 
 
 def _write_version(version: str) -> None:

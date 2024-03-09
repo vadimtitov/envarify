@@ -14,7 +14,7 @@ We can create a config object in Python:
 ```python
 from envarify import BaseConfig, EnvVar
 
-class MyConfig(BaseModel):
+class MyConfig(BaseConfig):
     timeout_s: float = EnvVar("TIMEOUT_S")
     api_key: str = EnvVar("API_KEY")
     enable_feature: bool = EnvVar("ENABLE_FEATURE", default=False)

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from functools import cache
+from functools import lru_cache
 from typing import Any
 
 from .cast import EnvVarCaster, get_caster
@@ -70,7 +70,7 @@ class BaseConfig:
             raise MissingEnvVarsError(", ".join(missing_envvars))
 
     @classmethod
-    @cache
+    @lru_cache
     def _properties(cls):
         """Get dictionary containg class properties."""
         return {k: v for k, v in cls.__dict__.items() if not k.startswith("__")}
@@ -84,7 +84,7 @@ class BaseConfig:
         return cls.__annotations__
 
     @classmethod
-    @cache
+    @lru_cache
     def _envvars(cls) -> list[_EnvVar]:
         """Yield over all environment variables."""
         envvars = []
