@@ -26,8 +26,8 @@ class BaseConfig:
     def __init__(self, **kwargs) -> None:
         """Initialize this object."""
         for key, value in kwargs.items():
-            if key not in self._properties():
-                raise TypeError(f"Unexpected keyword argument '{key}'")
+            if key not in self._annotations():
+                raise TypeError("Unexpected keyword argument '{}'".format(key))
             setattr(self, key, value)
 
     def __repr__(self) -> str:
@@ -35,7 +35,7 @@ class BaseConfig:
         return "{name}({attributes})".format(
             name=self.__class__.__name__,
             attributes=", ".join(
-                "{key}={value}".format(key=key, value=getattr(self, key))
+                "{key}={value!r}".format(key=key, value=getattr(self, key))
                 for key in self._annotations()
             ),
         )

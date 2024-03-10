@@ -70,7 +70,12 @@ def _is_single_nullable(tp: Type) -> bool:
 def _reduce_from_nullable(tp: Type):
     type_args = get_args(tp)
 
+    if len(type_args) != 2:
+        raise TypeError("Type {} is not nullable".format(tp))
+
     if type_args[0] is NoneType:
         return type_args[1]
     elif type_args[1] is NoneType:
         return type_args[0]
+    else:
+        raise TypeError("Type {} is not nullable".format(tp))
