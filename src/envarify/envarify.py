@@ -5,9 +5,9 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Any
+from typing import Any, Type
 
-from .cast import EnvVarCaster, get_caster
+from .cast import EnvVarCaster, SupportedType, get_caster
 from .errors import AnnotationError, MissingEnvVarsError
 
 
@@ -26,8 +26,8 @@ class BaseConfig:
     def __init__(self, **kwargs) -> None:
         """Initialize this object."""
         for key, value in kwargs.items():
-            if key not in self._properties():
-                raise TypeError(f"Unexpected keyword argument '{key}'")
+            if key not in self._annotations():
+                raise TypeError("Unexpected keyword argument '{}'".format(key))
             setattr(self, key, value)
 
     def __repr__(self) -> str:
@@ -35,7 +35,7 @@ class BaseConfig:
         return "{name}({attributes})".format(
             name=self.__class__.__name__,
             attributes=", ".join(
-                "{key}={value}".format(key=key, value=getattr(self, key))
+                "{key}={value!r}".format(key=key, value=getattr(self, key))
                 for key in self._annotations()
             ),
         )
@@ -71,12 +71,12 @@ class BaseConfig:
 
     @classmethod
     @lru_cache
-    def _properties(cls):
+    def _properties(cls) -> dict[str, Any]:
         """Get dictionary containg class properties."""
         return {k: v for k, v in cls.__dict__.items() if not k.startswith("__")}
 
     @classmethod
-    def _annotations(cls):
+    def _annotations(cls) -> dict[str, Type]:
         """Get dictionary containg class properties."""
         if not hasattr(cls, "__annotations__"):
             raise AnnotationError("Subclass must have annotated properties")
@@ -127,7 +127,7 @@ class _EnvVar:
         """Check if this environment variable has value."""
         return self.default is not None or self.exists()
 
-    def value(self) -> Any | None:
+    def value(self) -> SupportedType | None:
         """Check if this environment variable has value."""
         if self.has_value():
             value = os.environ.get(self.name, default=self.default)

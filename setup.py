@@ -1,18 +1,22 @@
 """Handle module packaging."""
 
+import re
 import subprocess
 import textwrap
 
 from setuptools import setup
 
+RE_VERSION = re.compile(r"(\d+\.\d+\.\d+)")
+
 
 def _get_release_version() -> str:
     """Get git release tag version."""
-    version = (
+    version_match = RE_VERSION.search(
         subprocess.run(["git", "describe", "--tags"], stdout=subprocess.PIPE)
         .stdout.decode("utf-8")
         .strip()
-    ) or "0.0.0"
+    )
+    version = version_match[0] if version_match else "0.0.0"
     print("Release version: ", version)
     return version
 
