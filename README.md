@@ -44,3 +44,4 @@ Currently the following types are supported
 - float
 - bool
 - str
+- dict

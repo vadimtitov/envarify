@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import json
 import sys
-from typing import Callable, Type, Union, get_args, get_origin
+from typing import Callable, Dict, Type, Union, get_args, get_origin
 
 from .errors import UnsupportedTypeError
 
@@ -16,7 +17,7 @@ else:
 
 __all__ = ["get_caster", "EnvVarCaster"]
 
-SupportedType = Union[int, float, str, bool]
+SupportedType = Union[int, float, str, bool, dict, Dict]
 
 _TRUE_VALUES = {"true", "yes", "on", "y", "1"}
 _FALSE_VALUES = {"false", "no", "off", "n", "0"}
@@ -34,6 +35,14 @@ def _str_to_bool(value: str) -> bool:
     raise ValueError(value)
 
 
+def _str_to_dict(value: str) -> dict:
+    """Convert string (JSON) to dictionary."""
+    try:
+        return json.loads(value)
+    except json.decoder.JSONDecodeError:
+        raise ValueError(value)
+
+
 EnvVarCaster = Callable[[str], SupportedType]
 
 _PRIMITIVES_CASTERS: dict[Type[SupportedType], EnvVarCaster] = {
@@ -41,6 +50,8 @@ _PRIMITIVES_CASTERS: dict[Type[SupportedType], EnvVarCaster] = {
     float: float,
     str: str,
     bool: _str_to_bool,
+    dict: _str_to_dict,
+    Dict: _str_to_dict,
 }
 
 

@@ -32,6 +32,12 @@ def test_str_to_bool_raises_error():
         cast._str_to_bool("try")
 
 
+def test_str_to_dict():
+    sample_json = '{"A": 1, "B": "b", "C": {"D": true}}'
+    expected = {"A": 1, "B": "b", "C": {"D": True}}
+    assert cast._str_to_dict(sample_json) == expected
+
+
 @pytest.mark.parametrize(
     "type_, expected",
     [
