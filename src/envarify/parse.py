@@ -1,4 +1,4 @@
-"""Helpers for casting from environment variable string to other types."""
+"""Helpers for parsing from environment variable string to other types."""
 
 from __future__ import annotations
 
@@ -15,9 +15,13 @@ else:
     UnionType = Union
 
 
-__all__ = ["get_caster", "EnvVarCaster"]
+__all__ = ["get_parser", "EnvVarParser"]
 
-SupportedType = Union[int, float, str, bool, dict, Dict]
+SupportedType = Union[int, float, str, bool, Dict]
+
+
+EnvVarParser = Callable[[str], SupportedType]
+
 
 _TRUE_VALUES = {"true", "yes", "on", "y", "1"}
 _FALSE_VALUES = {"false", "no", "off", "n", "0"}
@@ -43,9 +47,7 @@ def _str_to_dict(value: str) -> dict:
         raise ValueError(value)
 
 
-EnvVarCaster = Callable[[str], SupportedType]
-
-_PRIMITIVES_CASTERS: dict[Type[SupportedType], EnvVarCaster] = {
+_PARSERS: dict[Type[SupportedType], EnvVarParser] = {
     int: int,
     float: float,
     str: str,
@@ -55,16 +57,21 @@ _PRIMITIVES_CASTERS: dict[Type[SupportedType], EnvVarCaster] = {
 }
 
 
-def get_caster(type_: Type) -> EnvVarCaster:
-    """Get caster for a given type."""
+def get_parser(type_: Type) -> EnvVarParser:
+    """Get parser for a given type."""
+    origin_type = get_origin(type_)
+
     if _is_single_nullable(type_):
         type_ = _reduce_from_nullable(type_)
 
-    caster = _PRIMITIVES_CASTERS.get(type_)
-    if caster is None:
+    if origin_type is dict or origin_type is Dict:
+        type_ = origin_type
+
+    parser = _PARSERS.get(type_)
+    if parser is None:
         raise UnsupportedTypeError(type_)
 
-    return caster
+    return parser
 
 
 def _is_single_nullable(tp: Type) -> bool:

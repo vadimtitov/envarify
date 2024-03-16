@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from envarify import UnsupportedTypeError, cast
+from envarify import UnsupportedTypeError, parse
 
 from .const import PYTHON_IS_NEW
 
@@ -24,18 +24,18 @@ from .const import PYTHON_IS_NEW
     ],
 )
 def test_str_to_bool_ok(given, expected):
-    assert cast._str_to_bool(given) is expected
+    assert parse._str_to_bool(given) is expected
 
 
 def test_str_to_bool_raises_error():
     with pytest.raises(ValueError):
-        cast._str_to_bool("try")
+        parse._str_to_bool("try")
 
 
 def test_str_to_dict():
     sample_json = '{"A": 1, "B": "b", "C": {"D": true}}'
     expected = {"A": 1, "B": "b", "C": {"D": True}}
-    assert cast._str_to_dict(sample_json) == expected
+    assert parse._str_to_dict(sample_json) == expected
 
 
 @pytest.mark.parametrize(
@@ -43,7 +43,7 @@ def test_str_to_dict():
     [
         (int, int),
         (t.Optional[int], int),
-        (bool, cast._str_to_bool),
+        (bool, parse._str_to_bool),
         (t.Union[str, None], str),
         (float, float),
     ]
@@ -56,16 +56,16 @@ def test_str_to_dict():
         else []
     ),
 )
-def test_get_caster_ok(type_, expected):
-    assert cast.get_caster(type_) == expected
+def test_get_parser_ok(type_, expected):
+    assert parse.get_parser(type_) == expected
 
 
-def test_get_caster_raises_error():
+def test_get_parser_raises_error():
     class SomeCringeType:
         pass
 
     with pytest.raises(UnsupportedTypeError):
-        cast.get_caster(SomeCringeType)
+        parse.get_parser(SomeCringeType)
 
 
 @pytest.mark.parametrize(
@@ -86,7 +86,7 @@ def test_get_caster_raises_error():
     ),
 )
 def test_is_single_nullable_ok(type_, expected):
-    assert cast._is_single_nullable(type_) is expected
+    assert parse._is_single_nullable(type_) is expected
 
 
 @pytest.mark.parametrize(
@@ -97,12 +97,12 @@ def test_is_single_nullable_ok(type_, expected):
     ],
 )
 def test_reduce_from_nullable_ok(type_, expected):
-    assert cast._reduce_from_nullable(type_) is expected
+    assert parse._reduce_from_nullable(type_) is expected
 
 
 def test_reduce_from_nullable_raises_erro():
     with pytest.raises(TypeError):
-        cast._reduce_from_nullable(int)
+        parse._reduce_from_nullable(int)
 
     with pytest.raises(TypeError):
-        cast._reduce_from_nullable(int | str)
+        parse._reduce_from_nullable(int | str)
