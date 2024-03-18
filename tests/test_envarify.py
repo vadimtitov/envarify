@@ -39,6 +39,7 @@ def test_base_config_repr_ok():
         "TEST_FLOAT": "3.14",
         "TEST_STR": "Hello",
         "TEST_BOOL": "true",
+        "TEST_SET": "1|2|3",
         "TEST_CUSTOM": "a,b,c",
     },
 )
@@ -49,13 +50,15 @@ def test_base_config_fromenv_ok():
         test_float: float = EnvVar("TEST_FLOAT")
         test_str: str = EnvVar("TEST_STR")
         test_bool: bool = EnvVar("TEST_BOOL")
-        test_custom: t.List[str] = EnvVar("TEST_CUSTOM", cast=lambda v: v.split(","))
+        test_set: t.Set[int] = EnvVar("TEST_SET", delimiter="|")
+        test_custom: t.List[str] = EnvVar("TEST_CUSTOM", parse=lambda v: v.split(","))
 
     config = MyConfig.fromenv()
     assert config.test_int == 666
     assert config.test_float == 3.14
     assert config.test_str == "Hello"
     assert config.test_bool == True
+    assert config.test_set == {1, 2, 3}
     assert config.test_custom == ["a", "b", "c"]
 
 
@@ -114,11 +117,11 @@ def test_base_config_envvars_ok():
 
     class MyConfig(BaseConfig):
         x: int = EnvVar("TEST_X", default=5)
-        y: str = EnvVar(cast=test_func)
+        y: str = EnvVar(parse=test_func)
 
     assert MyConfig._envvars() == [
-        _EnvVar(attr="x", name="TEST_X", default=5, cast=int),
-        _EnvVar(attr="y", name="y", default=None, cast=test_func),
+        _EnvVar(attr="x", name="TEST_X", default=5, parse=int),
+        _EnvVar(attr="y", name="y", default=None, parse=test_func),
     ]
 
 

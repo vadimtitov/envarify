@@ -7,17 +7,27 @@ from dataclasses import dataclass
 from functools import lru_cache
 from typing import Any, Type
 
-from .cast import EnvVarCaster, SupportedType, get_caster
 from .errors import AnnotationError, MissingEnvVarsError
+from .parse import EnvVarParser, SupportedType, get_parser
 
 
 @dataclass(frozen=True)
 class EnvVar:
-    """Environment variable spec for package API."""
+    """Environment variable specification.
+
+    Arguments:
+        name: Environment variable name.
+            If not specified, attribute name will be used instead
+        default: Default value. Makes environment variable optional
+            i.e. error will not be raised if it is not set
+        parse: Custom parse function
+        delimiter: Delimiter string. Only applicable for parsing sequences
+    """
 
     name: str | None = None
     default: str | None = None
-    cast: EnvVarCaster | None = None
+    parse: EnvVarParser | None = None
+    delimiter: str = ","
 
 
 class BaseConfig:
@@ -96,7 +106,7 @@ class BaseConfig:
                         attr=key,
                         name=spec.name or key,
                         default=spec.default,
-                        cast=spec.cast or get_caster(type_),
+                        parse=spec.parse or get_parser(type_, spec),
                     )
                 )
             elif spec is None:
@@ -104,7 +114,9 @@ class BaseConfig:
                     _EnvVar(
                         attr=key,
                         name=key,
-                        cast=get_caster(type_),
+                        parse=get_parser(
+                            type_, EnvVar()  # EnvVar() is passed because it has default values
+                        ),
                     )
                 )
         return envvars
@@ -116,7 +128,7 @@ class _EnvVar:
 
     attr: str
     name: str
-    cast: EnvVarCaster
+    parse: EnvVarParser
     default: str | None = None
 
     def exists(self) -> bool:
@@ -131,5 +143,5 @@ class _EnvVar:
         """Check if this environment variable has value."""
         if self.has_value():
             value = os.environ.get(self.name, default=self.default)
-            return self.cast(value)  # type: ignore
+            return self.parse(value)  # type: ignore
         return None
