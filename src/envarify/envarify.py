@@ -21,11 +21,13 @@ class EnvVar:
         default: Default value. Makes environment variable optional
             i.e. error will not be raised if it is not set
         parse: Custom parse function
+        delimiter: Delimiter string. Only applicable for parsing sequences
     """
 
     name: str | None = None
     default: str | None = None
     parse: EnvVarParser | None = None
+    delimiter: str = ","
 
 
 class BaseConfig:
@@ -104,7 +106,7 @@ class BaseConfig:
                         attr=key,
                         name=spec.name or key,
                         default=spec.default,
-                        parse=spec.parse or get_parser(type_),
+                        parse=spec.parse or get_parser(type_, spec),
                     )
                 )
             elif spec is None:
@@ -112,7 +114,9 @@ class BaseConfig:
                     _EnvVar(
                         attr=key,
                         name=key,
-                        parse=get_parser(type_),
+                        parse=get_parser(
+                            type_, EnvVar()  # EnvVar() is passed because it has default values
+                        ),
                     )
                 )
         return envvars

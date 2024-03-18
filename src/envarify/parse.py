@@ -3,28 +3,45 @@
 from __future__ import annotations
 
 import json
-import sys
-from typing import Callable, Dict, Type, Union, get_args, get_origin
+from typing import TYPE_CHECKING, Callable, Type
 
 from .errors import UnsupportedTypeError
+from .inspect import SupportedType, TypeInspector
 
-if sys.version_info >= (3, 10):
-    from types import NoneType, UnionType
-else:
-    NoneType = type(None)
-    UnionType = Union
+if TYPE_CHECKING:
+    from .envarify import EnvVar
 
 
 __all__ = ["get_parser", "EnvVarParser"]
-
-SupportedType = Union[int, float, str, bool, Dict]
 
 
 EnvVarParser = Callable[[str], SupportedType]
 
 
-_TRUE_VALUES = {"true", "yes", "on", "y", "1"}
-_FALSE_VALUES = {"false", "no", "off", "n", "0"}
+def get_parser(type_: Type, spec: EnvVar) -> EnvVarParser:
+    """Get parser for a given type."""
+    ti = TypeInspector(type_, ignore_nullable=True)
+
+    # primitive
+    parser = _PRIMITIVE_PARSERS.get(ti.type)
+    if parser is not None:
+        return parser
+
+    # dictionary
+    if ti.is_dict():
+        return _str_to_dict
+
+    # sequence
+    if ti.is_sequence():
+        parser = _get_sequence_parser(
+            sequence_type=ti.origin_type,
+            value_type=ti.extract_inner_value_type(),
+            delimiter=spec.delimiter,
+        )
+        if parser is not None:
+            return parser
+
+    raise UnsupportedTypeError(type_)
 
 
 def _str_to_bool(value: str) -> bool:
@@ -36,7 +53,7 @@ def _str_to_bool(value: str) -> bool:
     elif value in _FALSE_VALUES:
         return False
 
-    raise ValueError(value)
+    raise ValueError("Cannot convert to bool: " + value)
 
 
 def _str_to_dict(value: str) -> dict:
@@ -44,56 +61,26 @@ def _str_to_dict(value: str) -> dict:
     try:
         return json.loads(value)
     except json.decoder.JSONDecodeError:
-        raise ValueError(value)
+        raise ValueError("Cannot convert to dictionary: " + value)
 
 
-_PARSERS: dict[Type[SupportedType], EnvVarParser] = {
-    int: int,
-    float: float,
-    str: str,
-    bool: _str_to_bool,
-    dict: _str_to_dict,
-    Dict: _str_to_dict,
-}
+def _get_sequence_parser(sequence_type: Type, value_type: Type, delimiter: str) -> Callable | None:
+    try:
+        value_parser = _PRIMITIVE_PARSERS[value_type]
+    except KeyError:
+        return None
 
-
-def get_parser(type_: Type) -> EnvVarParser:
-    """Get parser for a given type."""
-    origin_type = get_origin(type_)
-
-    if _is_single_nullable(type_):
-        type_ = _reduce_from_nullable(type_)
-
-    if origin_type is dict or origin_type is Dict:
-        type_ = origin_type
-
-    parser = _PARSERS.get(type_)
-    if parser is None:
-        raise UnsupportedTypeError(type_)
+    def parser(sequence: str):
+        return sequence_type(value_parser(value) for value in sequence.split(delimiter))
 
     return parser
 
 
-def _is_single_nullable(tp: Type) -> bool:
-    origin_type = get_origin(tp)
-    is_union = origin_type is UnionType or origin_type is Union
-
-    if not is_union:
-        return False
-
-    type_args = get_args(tp)
-    return len(type_args) == 2 and NoneType in type_args
-
-
-def _reduce_from_nullable(tp: Type):
-    type_args = get_args(tp)
-
-    if len(type_args) != 2:
-        raise TypeError("Type {} is not nullable".format(tp))
-
-    if type_args[0] is NoneType:
-        return type_args[1]
-    elif type_args[1] is NoneType:
-        return type_args[0]
-    else:
-        raise TypeError("Type {} is not nullable".format(tp))
+_PRIMITIVE_PARSERS: dict[Type[SupportedType], EnvVarParser] = {
+    int: int,
+    float: float,
+    str: str,
+    bool: _str_to_bool,
+}
+_TRUE_VALUES = {"true", "yes", "on", "y", "1"}
+_FALSE_VALUES = {"false", "no", "off", "n", "0"}

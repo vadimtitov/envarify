@@ -39,6 +39,7 @@ def test_base_config_repr_ok():
         "TEST_FLOAT": "3.14",
         "TEST_STR": "Hello",
         "TEST_BOOL": "true",
+        "TEST_SET": "1|2|3",
         "TEST_CUSTOM": "a,b,c",
     },
 )
@@ -49,6 +50,7 @@ def test_base_config_fromenv_ok():
         test_float: float = EnvVar("TEST_FLOAT")
         test_str: str = EnvVar("TEST_STR")
         test_bool: bool = EnvVar("TEST_BOOL")
+        test_set: t.Set[int] = EnvVar("TEST_SET", delimiter="|")
         test_custom: t.List[str] = EnvVar("TEST_CUSTOM", parse=lambda v: v.split(","))
 
     config = MyConfig.fromenv()
@@ -56,6 +58,7 @@ def test_base_config_fromenv_ok():
     assert config.test_float == 3.14
     assert config.test_str == "Hello"
     assert config.test_bool == True
+    assert config.test_set == {1, 2, 3}
     assert config.test_custom == ["a", "b", "c"]
 
 

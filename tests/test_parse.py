@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from envarify import UnsupportedTypeError, parse
+from envarify import EnvVar, UnsupportedTypeError, parse
 
 from .const import PYTHON_IS_NEW
 
@@ -46,6 +46,7 @@ def test_str_to_dict():
         (bool, parse._str_to_bool),
         (t.Union[str, None], str),
         (float, float),
+        (dict, parse._str_to_dict),
     ]
     + (
         [
@@ -57,7 +58,17 @@ def test_str_to_dict():
     ),
 )
 def test_get_parser_ok(type_, expected):
-    assert parse.get_parser(type_) == expected
+    assert parse.get_parser(type_, EnvVar()) == expected
+
+
+@patch("envarify.parse._get_sequence_parser", return_value="X")
+def test_get_parser_returns_sequence_ok(mock_get_sequence_parser):
+    assert parse.get_parser(list[int], EnvVar(delimiter="|")) == "X"
+    mock_get_sequence_parser.assert_called_once_with(
+        sequence_type=list,
+        value_type=int,
+        delimiter="|",
+    )
 
 
 def test_get_parser_raises_error():
@@ -65,44 +76,17 @@ def test_get_parser_raises_error():
         pass
 
     with pytest.raises(UnsupportedTypeError):
-        parse.get_parser(SomeCringeType)
+        parse.get_parser(SomeCringeType, EnvVar())
 
 
 @pytest.mark.parametrize(
-    "type_, expected",
-    (
-        [
-            (t.Optional[int], True),
-            (t.Optional[t.List[int]], True),
-            (t.Union[None, str], True),
-            (t.Union[str, int, None], False),
-            (int, False),
-        ]
-        + (
-            [(int | None, True), (None | str, True), (str | int | None, False)]
-            if PYTHON_IS_NEW
-            else []
-        )
-    ),
-)
-def test_is_single_nullable_ok(type_, expected):
-    assert parse._is_single_nullable(type_) is expected
-
-
-@pytest.mark.parametrize(
-    "type_, expected",
+    "outer, inner, value, expected",
     [
-        (t.Optional[int], int),
-        (t.Union[None, str], str),
+        (list, int, "1,2,3", [1, 2, 3]),
+        (tuple, int, "1,2,3", (1, 2, 3)),
+        (set, int, "1,2,3", {1, 2, 3}),
+        (list, bool, "1,0,1", [True, False, True]),
     ],
 )
-def test_reduce_from_nullable_ok(type_, expected):
-    assert parse._reduce_from_nullable(type_) is expected
-
-
-def test_reduce_from_nullable_raises_erro():
-    with pytest.raises(TypeError):
-        parse._reduce_from_nullable(int)
-
-    with pytest.raises(TypeError):
-        parse._reduce_from_nullable(int | str)
+def test_get_sequence_parser_ok(outer, inner, value, expected):
+    assert parse._get_sequence_parser(outer, inner, ",")(value) == expected
