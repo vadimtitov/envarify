@@ -7,7 +7,7 @@ import pytest
 
 import envarify
 from envarify import AnnotationError, BaseConfig, EnvVar, MissingEnvVarsError, UnsupportedTypeError
-from envarify.envarify import _EnvVar
+from envarify.envarify import _EnvVarSource
 
 from .const import PYTHON_IS_NEW
 
@@ -45,19 +45,22 @@ def test_base_config_repr_ok():
 )
 def test_base_config_fromenv_ok():
 
-    class MyConfig(BaseConfig):
+    class PrimitivesConfig(BaseConfig):
         test_int: int = EnvVar("TEST_INT")
         test_float: float = EnvVar("TEST_FLOAT")
         test_str: str = EnvVar("TEST_STR")
         test_bool: bool = EnvVar("TEST_BOOL")
+
+    class MyConfig(BaseConfig):
+        primitives: PrimitivesConfig
         test_set: t.Set[int] = EnvVar("TEST_SET", delimiter="|")
         test_custom: t.List[str] = EnvVar("TEST_CUSTOM", parse=lambda v: v.split(","))
 
     config = MyConfig.fromenv()
-    assert config.test_int == 666
-    assert config.test_float == 3.14
-    assert config.test_str == "Hello"
-    assert config.test_bool == True
+    assert config.primitives.test_int == 666
+    assert config.primitives.test_float == 3.14
+    assert config.primitives.test_str == "Hello"
+    assert config.primitives.test_bool == True
     assert config.test_set == {1, 2, 3}
     assert config.test_custom == ["a", "b", "c"]
 
@@ -85,11 +88,16 @@ def test_base_config_fromenv_nullable_arguments_ok():
 
 
 def test_base_config_fromenv_envvar_error_raised():
+    class ConfigInside(BaseConfig):
+        y: str = EnvVar("SOME_SUPER_UNLICKELY_ENVVAR")
+
     class MyConfig(BaseConfig):
+        y: ConfigInside
         x: int = EnvVar("SOME_NOT_EXISTING_ENVVAR")
 
-    with pytest.raises(MissingEnvVarsError):
+    with pytest.raises(MissingEnvVarsError) as e:
         MyConfig.fromenv()
+        assert e.env_vars == ["SOME_NOT_EXISTING_ENVVAR", "SOME_SUPER_UNLICKELY_ENVVAR"]
 
 
 def test_base_config_fromenv_unsupported_type_error_raised():
@@ -120,38 +128,38 @@ def test_base_config_envvars_ok():
         y: str = EnvVar(parse=test_func)
 
     assert MyConfig._envvars() == [
-        _EnvVar(attr="x", name="TEST_X", default=5, parse=int),
-        _EnvVar(attr="y", name="y", default=None, parse=test_func),
+        _EnvVarSource(attr="x", name="TEST_X", default=5, parse=int),
+        _EnvVarSource(attr="y", name="y", default=None, parse=test_func),
     ]
 
 
 @patch.dict(envarify.envarify.os.environ, {"X": "25"})
 def test_envvar_exists_ok():
-    env_var = _EnvVar("x", "X", str)
+    env_var = _EnvVarSource("x", "X", str)
     assert env_var.exists()
 
 
 @patch.dict(envarify.envarify.os.environ, {})
 def test_envvar_exists_not():
-    env_var = _EnvVar("x", "X", str)
+    env_var = _EnvVarSource("x", "X", str)
     assert not env_var.exists()
 
 
-@patch("envarify.envarify._EnvVar.exists", return_value=True)
+@patch("envarify.envarify._EnvVarSource.exists", return_value=True)
 def test_envvar_has_value_ok(mock):
-    env_var = _EnvVar("x", "X", str)
+    env_var = _EnvVarSource("x", "X", str)
     assert env_var.has_value()
 
 
-@patch("envarify.envarify._EnvVar.exists", return_value=False)
+@patch("envarify.envarify._EnvVarSource.exists", return_value=False)
 def test_envvar_has_value_ok_default(mock):
-    env_var = _EnvVar("", "", str, default="x")
+    env_var = _EnvVarSource("", "", str, default="x")
     assert env_var.has_value()
 
 
-@patch("envarify.envarify._EnvVar.exists", return_value=False)
+@patch("envarify.envarify._EnvVarSource.exists", return_value=False)
 def test_envvar_has_value_ok_not(mock):
-    env_var = _EnvVar("", "", str)
+    env_var = _EnvVarSource("", "", str)
     assert not env_var.has_value()
 
 

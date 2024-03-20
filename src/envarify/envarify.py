@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import inspect
 import os
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Any, Type
+from typing import Any, Protocol, Type
 
 from .errors import AnnotationError, MissingEnvVarsError
 from .parse import EnvVarParser, SupportedType, get_parser
@@ -62,11 +63,11 @@ class BaseConfig:
             MissingEnvVarsError - if required environment variables are not set
             ValueError - if environment variables values cannot be parsed into specified type
         """
-        cls._validate()
-        return cls(**{v.attr: v.value() for v in cls._envvars()})
+        cls.validate()
+        return cls(**{v.attr: v.value() for v in cls._sources()})
 
     @classmethod
-    def _validate(cls) -> None:
+    def validate(cls) -> None:
         """Run validations required to initialize from env vars."""
         not_annotated = [key for key in cls._properties() if key not in cls._annotations()]
         if not_annotated:
@@ -75,9 +76,18 @@ class BaseConfig:
                 + ", ".join(not_annotated)
             )
 
+        # collect from this config class
         missing_envvars = [e.name for e in cls._envvars() if not e.has_value()]
+
+        # collect from child config classes
+        for base_class in cls._base_classes():
+            try:
+                base_class.config_type.validate()
+            except MissingEnvVarsError as e:
+                missing_envvars.extend(e.env_vars)
+
         if missing_envvars:
-            raise MissingEnvVarsError(", ".join(missing_envvars))
+            raise MissingEnvVarsError(missing_envvars)
 
     @classmethod
     @lru_cache
@@ -95,14 +105,30 @@ class BaseConfig:
 
     @classmethod
     @lru_cache
-    def _envvars(cls) -> list[_EnvVar]:
+    def _envvars(cls) -> list[_EnvVarSource]:
         """Yield over all environment variables."""
-        envvars = []
+        return [source for source in cls._sources() if isinstance(source, _EnvVarSource)]
+
+    @classmethod
+    @lru_cache
+    def _base_classes(cls) -> list[_BaseConfigSource]:
+        """Yield over all base config sources."""
+        return [source for source in cls._sources() if isinstance(source, _BaseConfigSource)]
+
+    @classmethod
+    @lru_cache
+    def _sources(cls) -> list[_ValueSource]:
+        """Yield over all value sources."""
+        sources: list[_ValueSource] = []
+
         for key, type_ in cls._annotations().items():
             spec: EnvVar | None = cls._properties().get(key)
-            if isinstance(spec, EnvVar):
-                envvars.append(
-                    _EnvVar(
+
+            if inspect.isclass(type_) and issubclass(type_, BaseConfig):
+                sources.append(_BaseConfigSource(attr=key, config_type=type_))
+            elif isinstance(spec, EnvVar):
+                sources.append(
+                    _EnvVarSource(
                         attr=key,
                         name=spec.name or key,
                         default=spec.default,
@@ -110,8 +136,8 @@ class BaseConfig:
                     )
                 )
             elif spec is None:
-                envvars.append(
-                    _EnvVar(
+                sources.append(
+                    _EnvVarSource(
                         attr=key,
                         name=key,
                         parse=get_parser(
@@ -119,11 +145,29 @@ class BaseConfig:
                         ),
                     )
                 )
-        return envvars
+        return sources
+
+
+class _ValueSource(Protocol):
+
+    attr: str
+
+    def value(self) -> SupportedType | BaseConfig | None: ...
 
 
 @dataclass(frozen=True)
-class _EnvVar:
+class _BaseConfigSource(_ValueSource):
+    """Base config source."""
+
+    attr: str
+    config_type: Type[BaseConfig]
+
+    def value(self) -> BaseConfig:
+        return self.config_type.fromenv()
+
+
+@dataclass(frozen=True)
+class _EnvVarSource(_ValueSource):
     """Environment variable representation."""
 
     attr: str
