@@ -27,7 +27,10 @@ class TypeInspector:
         if origin is None:
             origin = type_
 
-        self.type = origin[args] if args else origin
+        try:
+            self.type = origin[args] if args else origin
+        except TypeError:
+            self.type = type_
         self.origin_type = origin
         self.type_args = args
 
