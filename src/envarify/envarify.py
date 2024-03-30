@@ -6,7 +6,7 @@ import inspect
 import os
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Any, Protocol, Type
+from typing import Any, Protocol, Type, TypeVar
 
 from .errors import AnnotationError, MissingEnvVarsError
 from .parse import EnvVarParser, SupportedType, get_parser
@@ -52,11 +52,11 @@ class BaseConfig:
         )
 
     @classmethod
-    def fromenv(cls) -> BaseConfig:
+    def fromenv(cls: type[_TConfig]) -> _TConfig:
         """Initialize this object from environment variables.
 
         Returns:
-            BaseConfig
+            Config object/Self
 
         Raises:
             AnnotationError - if subclass' annotation are not valid
@@ -146,6 +146,9 @@ class BaseConfig:
                     )
                 )
         return sources
+
+
+_TConfig = TypeVar("_TConfig", bound=BaseConfig)
 
 
 class _ValueSource(Protocol):
