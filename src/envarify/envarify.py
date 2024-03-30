@@ -6,10 +6,11 @@ import inspect
 import os
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Any, Protocol, Type
+from typing import Any, Protocol, Type, TypeVar
 
 from .errors import AnnotationError, MissingEnvVarsError
-from .parse import EnvVarParser, SupportedType, get_parser
+from .inspect import SupportedType, Undefined, UndefinedType
+from .parse import EnvVarParser, get_parser
 
 
 @dataclass(frozen=True)
@@ -26,7 +27,7 @@ class EnvVar:
     """
 
     name: str | None = None
-    default: str | None = None
+    default: SupportedType | None | UndefinedType = Undefined
     parse: EnvVarParser | None = None
     delimiter: str = ","
 
@@ -52,11 +53,11 @@ class BaseConfig:
         )
 
     @classmethod
-    def fromenv(cls) -> BaseConfig:
+    def fromenv(cls: type[_TConfig]) -> _TConfig:
         """Initialize this object from environment variables.
 
         Returns:
-            BaseConfig
+            Config object/Self
 
         Raises:
             AnnotationError - if subclass' annotation are not valid
@@ -148,6 +149,9 @@ class BaseConfig:
         return sources
 
 
+_TConfig = TypeVar("_TConfig", bound=BaseConfig)
+
+
 class _ValueSource(Protocol):
 
     attr: str
@@ -173,7 +177,7 @@ class _EnvVarSource(_ValueSource):
     attr: str
     name: str
     parse: EnvVarParser
-    default: str | None = None
+    default: SupportedType | None | UndefinedType = Undefined
 
     def exists(self) -> bool:
         """Check if this environment variable exists."""
@@ -181,11 +185,12 @@ class _EnvVarSource(_ValueSource):
 
     def has_value(self) -> bool:
         """Check if this environment variable has value."""
-        return self.default is not None or self.exists()
+        return self.default is not Undefined or self.exists()
 
     def value(self) -> SupportedType | None:
         """Check if this environment variable has value."""
         if self.has_value():
             value = os.environ.get(self.name, default=self.default)
-            return self.parse(value)  # type: ignore
+            if value is not None:
+                return self.parse(value)  # type: ignore
         return None

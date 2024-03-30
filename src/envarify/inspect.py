@@ -14,6 +14,16 @@ from .errors import UnsupportedTypeError
 SupportedType = Union[int, float, str, bool, dict, list, set, tuple]
 
 
+class UndefinedType:
+    """Undefined type.
+
+    Needed since None is a valid default value in EnvVar specification.
+    """
+
+
+Undefined = UndefinedType()
+
+
 class TypeInspector:
     """Helper class for type inspection and extraction."""
 
@@ -27,7 +37,10 @@ class TypeInspector:
         if origin is None:
             origin = type_
 
-        self.type = origin[args] if args else origin
+        try:
+            self.type = origin[args] if args else origin
+        except TypeError:
+            self.type = type_
         self.origin_type = origin
         self.type_args = args
 

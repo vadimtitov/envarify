@@ -7,7 +7,7 @@ import pytest
 
 import envarify
 from envarify import AnnotationError, BaseConfig, EnvVar, MissingEnvVarsError, UnsupportedTypeError
-from envarify.envarify import _EnvVarSource
+from envarify.envarify import Undefined, _EnvVarSource
 
 from .const import PYTHON_IS_NEW
 
@@ -72,19 +72,19 @@ def test_base_config_fromenv_nullable_arguments_ok():
         class MyConfig(BaseConfig):
             test_opt: t.Optional[int] = EnvVar("XXX")
             test_union: t.Union[float, None] = EnvVar("XXX")
-            test_default: int | None = EnvVar(default=45)
+            test_default: int | None = EnvVar(default=None)
 
     else:
 
         class MyConfig(BaseConfig):
             test_opt: t.Optional[int] = EnvVar("XXX")
             test_union: t.Union[float, None] = EnvVar("XXX")
-            test_default: t.Optional[int] = EnvVar(default=45)
+            test_default: t.Optional[int] = EnvVar(default=None)
 
     config = MyConfig.fromenv()
     assert config.test_opt == 666
     assert config.test_union == 666.0
-    assert config.test_default == 45
+    assert config.test_default is None
 
 
 def test_base_config_fromenv_envvar_error_raised():
@@ -129,7 +129,7 @@ def test_base_config_envvars_ok():
 
     assert MyConfig._envvars() == [
         _EnvVarSource(attr="x", name="TEST_X", default=5, parse=int),
-        _EnvVarSource(attr="y", name="y", default=None, parse=test_func),
+        _EnvVarSource(attr="y", name="y", default=Undefined, parse=test_func),
     ]
 
 
