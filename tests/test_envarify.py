@@ -50,6 +50,7 @@ def test_base_config_fromenv_ok():
         test_float: float = EnvVar("TEST_FLOAT")
         test_str: str = EnvVar("TEST_STR")
         test_bool: bool = EnvVar("TEST_BOOL")
+        test_bool_default: bool = EnvVar("FAKE_BOOL", default=False)
 
     class MyConfig(BaseConfig):
         primitives: PrimitivesConfig
@@ -61,6 +62,7 @@ def test_base_config_fromenv_ok():
     assert config.primitives.test_float == 3.14
     assert config.primitives.test_str == "Hello"
     assert config.primitives.test_bool == True
+    assert config.primitives.test_bool_default == False
     assert config.test_set == {1, 2, 3}
     assert config.test_custom == ["a", "b", "c"]
 
