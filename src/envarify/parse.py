@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Callable, Type
 
 from .errors import UnsupportedTypeError
 from .inspect import SupportedType, TypeInspector
+from .types import SecretString
 
 if TYPE_CHECKING:
     from .envarify import EnvVar
@@ -86,6 +87,8 @@ _PRIMITIVE_PARSERS: dict[Type[SupportedType], EnvVarParser] = {
     float: float,
     str: str,
     bool: _str_to_bool,
+    SecretString: SecretString,
 }
+
 _TRUE_VALUES = {"true", "yes", "on", "y", "1"}
 _FALSE_VALUES = {"false", "no", "off", "n", "0"}

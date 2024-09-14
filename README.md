@@ -13,18 +13,18 @@ export ENABLE_FEATURE=true
 ```
 We can create a config object in Python:
 ```python
-from envarify import BaseConfig, EnvVar
+from envarify import BaseConfig, EnvVar, SecretString
 
 class MyConfig(BaseConfig):
     timeout_s: float = EnvVar("TIMEOUT_S")
-    api_key: str = EnvVar("API_KEY")
+    api_key: SecretString = EnvVar("API_KEY")
     allowed_ids: set[int] = EnvVar("ALLOWED_IDS")
     enable_feature: bool = EnvVar("ENABLE_FEATURE", default=False)
     optional_arg: str | None = EnvVar("OPTIONAL_ARG", default=None)
 
 config = MyConfig.fromenv()
 print(config)
-#> MyConfig(timeout_s=2.5, api_key="some_key", allowed_ids={1,2,3}, enable_feature=True, optional_arg=None)
+#> MyConfig(timeout_s=2.5, api_key='******', allowed_ids={1,2,3}, enable_feature=True, optional_arg=None)
 ```
 
 
@@ -63,6 +63,24 @@ mock_config = MyConfig(timeout_s=4.2, api_key="dummy", allowed_ids={1,2,3}, enab
     - `tuple[T]`
 
       where `T` is any primitive type
+
+
+ - ### Special types
+    - `SecretString`
+
+        Masks sensitive environment variables by displaying ****** when printed or logged. The actual value is accessible via the `reveal()` method, and memory is cleared when object is no longer needed.
+        ```python
+        from envarify import BaseConfig, EnvVar, SecretString
+
+        class MyConfig(BaseConfig):
+            api_key: SecretString = EnvVar("API_KEY")
+
+        config = MyConfig.fromenv()
+        print(config.api_key)
+
+        #> MyConfig(api_key='"******"')
+
+        ```
 
 
 - ### `BaseConfig` subtype itself
