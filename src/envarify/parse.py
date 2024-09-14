@@ -44,8 +44,11 @@ def get_parser(type_: Type, spec: EnvVar) -> EnvVarParser:
     raise UnsupportedTypeError(type_)
 
 
-def _str_to_bool(value: str) -> bool:
+def _str_to_bool(value: str | bool) -> bool:
     """Determine if string value is truthy."""
+    if isinstance(value, bool):
+        return value
+
     value = value.lower()
 
     if value in _TRUE_VALUES:
@@ -56,8 +59,10 @@ def _str_to_bool(value: str) -> bool:
     raise ValueError("Cannot convert to bool: " + value)
 
 
-def _str_to_dict(value: str) -> dict:
+def _str_to_dict(value: str | dict) -> dict:
     """Convert string (JSON) to dictionary."""
+    if isinstance(value, dict):
+        return value
     try:
         return json.loads(value)
     except json.decoder.JSONDecodeError:

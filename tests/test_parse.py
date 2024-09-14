@@ -21,6 +21,8 @@ from .const import PYTHON_IS_NEW
         ("OFF", False),
         ("n", False),
         ("0", False),
+        (True, True),
+        (False, False),
     ],
 )
 def test_str_to_bool_ok(given, expected):
@@ -36,6 +38,7 @@ def test_str_to_dict():
     sample_json = '{"A": 1, "B": "b", "C": {"D": true}}'
     expected = {"A": 1, "B": "b", "C": {"D": True}}
     assert parse._str_to_dict(sample_json) == expected
+    assert parse._str_to_dict(expected) == expected
 
 
 @pytest.mark.parametrize(

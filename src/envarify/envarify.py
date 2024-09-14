@@ -70,7 +70,14 @@ class BaseConfig:
     @classmethod
     def validate(cls) -> None:
         """Run validations required to initialize from env vars."""
-        not_annotated = [key for key in cls._properties() if key not in cls._annotations()]
+        properties = cls._properties()
+        annotations = cls._annotations()
+
+        if not properties and not annotations:
+            raise AnnotationError(cls.__name__ + " has no properties or annotations")
+
+        not_annotated = [key for key in properties if key not in annotations]
+
         if not_annotated:
             raise AnnotationError(
                 "Missing type annotatations in the following properties: "
