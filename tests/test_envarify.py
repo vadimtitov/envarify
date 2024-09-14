@@ -57,6 +57,13 @@ def test_base_config_fromenv_ok():
         test_set: t.Set[int] = EnvVar("TEST_SET", delimiter="|")
         test_custom: t.List[str] = EnvVar("TEST_CUSTOM", parse=lambda v: v.split(","))
 
+        def custom_method(self) -> int:
+            return self.primitives.test_int * 10
+
+        @property
+        def custom_property(self) -> str:
+            return "Custom " + self.primitives.test_str
+
     config = MyConfig.fromenv()
     assert config.primitives.test_int == 666
     assert config.primitives.test_float == 3.14
@@ -65,6 +72,8 @@ def test_base_config_fromenv_ok():
     assert config.primitives.test_bool_default == False
     assert config.test_set == {1, 2, 3}
     assert config.test_custom == ["a", "b", "c"]
+    assert config.custom_method() == 6660
+    assert config.custom_property == "Custom Hello"
 
 
 @patch.dict(envarify.envarify.os.environ, {"XXX": "666"})

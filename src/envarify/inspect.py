@@ -4,7 +4,7 @@ import sys
 from typing import Type, Union, get_args, get_origin
 
 if sys.version_info >= (3, 10):
-    from types import NoneType, UnionType
+    from types import NoneType, UnionType  # type: ignore
 else:
     NoneType = type(None)
     UnionType = Union
