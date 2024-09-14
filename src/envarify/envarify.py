@@ -101,7 +101,17 @@ class BaseConfig:
     @lru_cache
     def _properties(cls) -> dict[str, Any]:
         """Get dictionary containg class properties."""
-        return {k: v for k, v in cls.__dict__.items() if not k.startswith("__")}
+        return {
+            k: v
+            for k, v in cls.__dict__.items()
+            if not (
+                k.startswith("__")
+                or isinstance(v, property)
+                or inspect.isfunction(v)
+                or inspect.ismethod(v)
+                or inspect.isdatadescriptor(v)
+            )
+        }
 
     @classmethod
     def _annotations(cls) -> dict[str, Type]:
