@@ -10,8 +10,9 @@ else:
     UnionType = Union
 
 from .errors import UnsupportedTypeError
+from .types import SecretString
 
-SupportedType = Union[int, float, str, bool, dict, list, set, tuple]
+SupportedType = Union[int, float, str, bool, dict, list, set, tuple, SecretString]
 
 
 class UndefinedType:

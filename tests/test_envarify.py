@@ -6,7 +6,14 @@ from unittest.mock import patch
 import pytest
 
 import envarify
-from envarify import AnnotationError, BaseConfig, EnvVar, MissingEnvVarsError, UnsupportedTypeError
+from envarify import (
+    AnnotationError,
+    BaseConfig,
+    EnvVar,
+    MissingEnvVarsError,
+    SecretString,
+    UnsupportedTypeError,
+)
 from envarify.envarify import Undefined, _EnvVarSource
 
 from .const import PYTHON_IS_NEW
@@ -41,6 +48,7 @@ def test_base_config_repr_ok():
         "TEST_BOOL": "true",
         "TEST_SET": "1|2|3",
         "TEST_CUSTOM": "a,b,c",
+        "TEST_SECRET": "secret",
     },
 )
 def test_base_config_fromenv_ok():
@@ -51,6 +59,7 @@ def test_base_config_fromenv_ok():
         test_str: str = EnvVar("TEST_STR")
         test_bool: bool = EnvVar("TEST_BOOL")
         test_bool_default: bool = EnvVar("FAKE_BOOL", default=False)
+        test_secret: SecretString = EnvVar("TEST_SECRET")
 
     class MyConfig(BaseConfig):
         primitives: PrimitivesConfig
@@ -70,6 +79,9 @@ def test_base_config_fromenv_ok():
     assert config.primitives.test_str == "Hello"
     assert config.primitives.test_bool == True
     assert config.primitives.test_bool_default == False
+    assert str(config.primitives.test_secret) == "******"
+    assert config.primitives.test_secret.reveal() == "secret"
+
     assert config.test_set == {1, 2, 3}
     assert config.test_custom == ["a", "b", "c"]
     assert config.custom_method() == 6660
