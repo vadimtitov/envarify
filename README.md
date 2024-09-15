@@ -78,9 +78,39 @@ mock_config = MyConfig(timeout_s=4.2, api_key="dummy", allowed_ids={1,2,3}, enab
         config = MyConfig.fromenv()
         print(config.api_key)
 
-        #> MyConfig(api_key='"******"')
+        #> MyConfig(api_key='******')
 
         ```
+    - `Url`
+
+        Validates that string is a URL.
+        ```python
+        from envarify import BaseConfig, EnvVar, Url
+
+        class MyConfig(BaseConfig):
+            url: Url = EnvVar("ws://example.com")
+
+        config = MyConfig.fromenv()
+        print(config.api_key)
+
+        #> MyConfig(url='ws://example.com')
+
+        ```
+
+    - `HttpUrl`
+
+        Same as `Url` but validates for `http` protocol
+
+    - `HttpsUrl`
+
+        Same as `Url` but validates for `https` protocol
+
+    - `AnyHttpUrl`
+
+        Same as `Url` but validates for either `http` or `https` protocol
+
+
+
 
 
 - ### `BaseConfig` subtype itself
