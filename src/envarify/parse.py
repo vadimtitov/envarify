@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Callable, Type
 
 from .errors import UnsupportedTypeError
 from .inspect import SupportedType, TypeInspector
-from .types import SecretString
+from .types import AnyHttpUrl, HttpsUrl, HttpUrl, SecretString, Url
 
 if TYPE_CHECKING:
     from .envarify import EnvVar
@@ -24,7 +24,7 @@ def get_parser(type_: Type, spec: EnvVar) -> EnvVarParser:
     ti = TypeInspector(type_, ignore_nullable=True)
 
     # primitive
-    parser = _PRIMITIVE_PARSERS.get(ti.type)
+    parser = _PARSERS.get(ti.type)
     if parser is not None:
         return parser
 
@@ -72,7 +72,7 @@ def _str_to_dict(value: str | dict) -> dict:
 
 def _get_sequence_parser(sequence_type: Type, value_type: Type, delimiter: str) -> Callable | None:
     try:
-        value_parser = _PRIMITIVE_PARSERS[value_type]
+        value_parser = _PARSERS[value_type]
     except KeyError:
         return None
 
@@ -82,12 +82,16 @@ def _get_sequence_parser(sequence_type: Type, value_type: Type, delimiter: str) 
     return parser
 
 
-_PRIMITIVE_PARSERS: dict[Type[SupportedType], EnvVarParser] = {
+_PARSERS: dict[Type[SupportedType], EnvVarParser] = {
     int: int,
     float: float,
     str: str,
     bool: _str_to_bool,
     SecretString: SecretString,
+    AnyHttpUrl: AnyHttpUrl,
+    HttpUrl: HttpUrl,
+    HttpsUrl: HttpsUrl,
+    Url: Url,
 }
 
 _TRUE_VALUES = {"true", "yes", "on", "y", "1"}

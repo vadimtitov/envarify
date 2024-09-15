@@ -2,7 +2,7 @@
 
 from .envarify import BaseConfig, EnvVar
 from .errors import AnnotationError, EnvarifyError, MissingEnvVarsError, UnsupportedTypeError
-from .types import SecretString
+from .types import AnyHttpUrl, HttpsUrl, HttpUrl, SecretString, Url
 
 __all__ = [
     "BaseConfig",
@@ -12,4 +12,8 @@ __all__ = [
     "MissingEnvVarsError",
     "UnsupportedTypeError",
     "SecretString",
+    "AnyHttpUrl",
+    "HttpsUrl",
+    "HttpUrl",
+    "Url",
 ]

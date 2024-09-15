@@ -10,9 +10,23 @@ else:
     UnionType = Union
 
 from .errors import UnsupportedTypeError
-from .types import SecretString
+from .types import AnyHttpUrl, HttpsUrl, HttpUrl, SecretString, Url
 
-SupportedType = Union[int, float, str, bool, dict, list, set, tuple, SecretString]
+SupportedType = Union[
+    int,
+    float,
+    str,
+    bool,
+    dict,
+    list,
+    set,
+    tuple,
+    AnyHttpUrl,
+    HttpsUrl,
+    HttpUrl,
+    SecretString,
+    Url,
+]
 
 
 class UndefinedType:
