@@ -13,6 +13,7 @@ from envarify import (
     MissingEnvVarsError,
     SecretString,
     UnsupportedTypeError,
+    Url,
 )
 from envarify.envarify import Undefined, _EnvVarSource
 
@@ -49,6 +50,7 @@ def test_base_config_repr_ok():
         "TEST_SET": "1|2|3",
         "TEST_CUSTOM": "a,b,c",
         "TEST_SECRET": "secret",
+        "TEST_URL": "ws://example.com",
     },
 )
 def test_base_config_fromenv_ok():
@@ -60,6 +62,7 @@ def test_base_config_fromenv_ok():
         test_bool: bool = EnvVar("TEST_BOOL")
         test_bool_default: bool = EnvVar("FAKE_BOOL", default=False)
         test_secret: SecretString = EnvVar("TEST_SECRET")
+        test_url: Url = EnvVar("TEST_URL")
 
     class MyConfig(BaseConfig):
         primitives: PrimitivesConfig
@@ -81,6 +84,7 @@ def test_base_config_fromenv_ok():
     assert config.primitives.test_bool_default == False
     assert str(config.primitives.test_secret) == "******"
     assert config.primitives.test_secret.reveal() == "secret"
+    assert config.primitives.test_url == "ws://example.com"
 
     assert config.test_set == {1, 2, 3}
     assert config.test_custom == ["a", "b", "c"]
