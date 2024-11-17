@@ -42,6 +42,8 @@ class BaseConfig:
                 raise TypeError("Unexpected keyword argument '{}'".format(key))
             setattr(self, key, value)
 
+        self._key = tuple(sorted(kwargs.items()))
+
     def __repr__(self) -> str:
         """Return representation."""
         return "{name}({attributes})".format(
@@ -51,6 +53,16 @@ class BaseConfig:
                 for key in self._annotations()
             ),
         )
+
+    def __eq__(self, other) -> bool:
+        """Check equality with another instance."""
+        if not isinstance(other, BaseConfig):
+            return False
+        return self._key == other._key
+
+    def __hash__(self) -> int:
+        """Generate a hash based on the unique key."""
+        return hash(self._key)
 
     @classmethod
     def fromenv(cls: type[_TConfig]) -> _TConfig:

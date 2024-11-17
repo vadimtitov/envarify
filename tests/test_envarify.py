@@ -160,6 +160,27 @@ def test_base_config_envvars_ok():
     ]
 
 
+def test_base_config_equal():
+
+    class MyConfig(BaseConfig):
+        x: int
+        y: str
+
+    assert MyConfig(x=1, y="2") == MyConfig(y="2", x=1)
+    assert MyConfig(x=1, y="3") != MyConfig(y="2", x=1)
+
+
+def test_base_config_hash():
+
+    class MyConfig(BaseConfig):
+        x: int
+        y: str
+
+    assert hash(MyConfig(x=1, y="2")) == hash(MyConfig(y="2", x=1))
+    assert MyConfig(x=1, y="2") in {MyConfig(y="2", x=1)}
+    assert MyConfig(x=1, y="3") not in {MyConfig(y="2", x=1)}
+
+
 @patch.dict(envarify.envarify.os.environ, {"X": "25"})
 def test_envvar_exists_ok():
     env_var = _EnvVarSource("x", "X", str)
@@ -188,7 +209,3 @@ def test_envvar_has_value_ok_default(mock):
 def test_envvar_has_value_ok_not(mock):
     env_var = _EnvVarSource("", "", str)
     assert not env_var.has_value()
-
-
-def test_envvar_value():
-    pass
