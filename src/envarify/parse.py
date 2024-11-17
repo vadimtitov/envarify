@@ -29,6 +29,10 @@ def get_parser(type_: Type, spec: EnvVar) -> EnvVarParser:
     if parser is not None:
         return parser
 
+    # string enum
+    if ti.is_string_enum():
+        return type_
+
     # dictionary
     if ti.is_dict():
         return _str_to_dict

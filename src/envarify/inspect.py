@@ -2,6 +2,7 @@
 
 import sys
 from datetime import date, datetime
+from enum import Enum
 from typing import Type, Union, get_args, get_origin
 
 if sys.version_info >= (3, 10):
@@ -24,6 +25,7 @@ SupportedType = Union[
     tuple,
     datetime,
     date,
+    Enum,
     AnyHttpUrl,
     HttpsUrl,
     HttpUrl,
@@ -68,6 +70,10 @@ class TypeInspector:
         if not is_union:
             return False
         return len(self.type_args) == 2 and NoneType in self.type_args
+
+    def is_string_enum(self) -> bool:
+        """Check if type is a string enum."""
+        return issubclass(self.origin_type, str) and issubclass(self.origin_type, Enum)
 
     def is_dict(self) -> bool:
         """Check if type is a dictionary."""

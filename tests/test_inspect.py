@@ -1,4 +1,5 @@
 import typing as t
+from enum import Enum
 from unittest.mock import patch
 
 import pytest
@@ -45,6 +46,12 @@ def test_type_inspector_init_ignore_nullable_ok():
 )
 def test_type_inspector_is_single_nullable_ok(type_, expected):
     assert inspect.TypeInspector(type_).is_single_nullable() is expected
+
+
+def test_type_inspector_is_string_enum():
+    class MockStrEnum(str, Enum): ...
+
+    assert inspect.TypeInspector(MockStrEnum).is_string_enum()
 
 
 @pytest.mark.parametrize(
