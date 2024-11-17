@@ -35,12 +35,14 @@ class EnvVar:
 class BaseConfig:
     """Base config class."""
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         """Initialize this object."""
         for key, value in kwargs.items():
             if key not in self._annotations():
                 raise TypeError("Unexpected keyword argument '{}'".format(key))
             setattr(self, key, value)
+
+        self._key = tuple(sorted(kwargs.items()))
 
     def __repr__(self) -> str:
         """Return representation."""
@@ -51,6 +53,16 @@ class BaseConfig:
                 for key in self._annotations()
             ),
         )
+
+    def __eq__(self, other: object) -> bool:
+        """Check equality with another instance."""
+        if not isinstance(other, BaseConfig):
+            return False
+        return self._key == other._key
+
+    def __hash__(self) -> int:
+        """Generate a hash based on the unique key."""
+        return hash(self._key)
 
     @classmethod
     def fromenv(cls: type[_TConfig]) -> _TConfig:

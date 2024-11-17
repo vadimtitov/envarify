@@ -43,7 +43,7 @@ class SecretString:
         """Return object hash."""
         return hash(self.__value.decode("utf-8"))
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Erase value from memory before object is destroyed."""
         self.erase()
 

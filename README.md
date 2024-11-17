@@ -30,40 +30,23 @@ print(config)
 
 
 # Missing environment variables
-If there are some required environment variables that are not set, error will be raised:
+If there are required environment variables not set, they will be grouped into one error e.g.:
 ```python
 config = MyConfig.fromenv()
 #> MissingEnvVarsError: TIMEOUT_S, API_KEY, ALLOWED_IDS
 ```
 
 
-# Testing
-In tests for your application you don't have to worry about mocking the environment variables. Instead just create a mock config object:
-```python
-mock_config = MyConfig(timeout_s=4.2, api_key="dummy", allowed_ids={1,2,3}, enable_feature=True)
-```
-
 # Supported Types
 
- - ### Primitive types
+ - ### Built-in/standard library types
     - `int`
     - `float`
     - `bool`
     - `str`
-
-
-- ### Dictionary
-
-    `dict` type reads environmental variable as JSON
-
-
-- ### Sequences (delimiter separated values)
-    - `list[T]`
-    - `set[T]`
-    - `tuple[T]`
-
-      where `T` is any primitive type
-
+    - `typing.StrEnum`
+    - `datetime.date`
+    - `datetime.datetime`
 
  - ### Special types
     - `SecretString`
@@ -111,6 +94,18 @@ mock_config = MyConfig(timeout_s=4.2, api_key="dummy", allowed_ids={1,2,3}, enab
 
 
 
+- ### Dictionary
+
+    - `dict` / `typing.Dict` type reads environmental variable as JSON
+
+
+- ### Sequences (delimiter separated values)
+    - `list[T]` / `typing.List[T]`
+    - `set[T]` / `typing.Set[T]`
+    - `tuple[T]` / `typing.Tuple[T]`
+
+      where `T` is any primitive type
+
 
 
 - ### `BaseConfig` subtype itself
@@ -129,3 +124,10 @@ mock_config = MyConfig(timeout_s=4.2, api_key="dummy", allowed_ids={1,2,3}, enab
     print(config)
     #> ApplicationConfig(component=ComponentConfig(timeout=5), other='dummy')
     ```
+
+
+# Testing
+In tests for your application you don't have to worry about mocking the environment variables. Instead just create a mock config object:
+```python
+mock_config = MyConfig(timeout_s=4.2, api_key="dummy", allowed_ids={1,2,3}, enable_feature=True)
+```

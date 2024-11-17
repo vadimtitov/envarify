@@ -1,5 +1,7 @@
 import typing as t
 from dataclasses import dataclass
+from datetime import date, datetime
+from enum import Enum
 from typing import Optional, Union
 from unittest.mock import patch
 
@@ -40,6 +42,11 @@ def test_base_config_repr_ok():
     assert MyConfig(x=1, y="2").__repr__() == "MyConfig(x=1, y='2')"
 
 
+class TestStrEnum(str, Enum):
+
+    TEST_VALUE = "TEST_STR_ENUM_VALUE"
+
+
 @patch.dict(
     envarify.envarify.os.environ,
     {
@@ -51,6 +58,9 @@ def test_base_config_repr_ok():
         "TEST_CUSTOM": "a,b,c",
         "TEST_SECRET": "secret",
         "TEST_URL": "ws://example.com",
+        "TEST_ISO_DATE": "2024-04-13",
+        "TEST_ISO_DATETIME": "2024-11-17T12:34:56.789123",
+        "TEST_STR_ENUM": "TEST_STR_ENUM_VALUE",
     },
 )
 def test_base_config_fromenv_ok():
@@ -63,6 +73,9 @@ def test_base_config_fromenv_ok():
         test_bool_default: bool = EnvVar("FAKE_BOOL", default=False)
         test_secret: SecretString = EnvVar("TEST_SECRET")
         test_url: Url = EnvVar("TEST_URL")
+        test_iso_date: date = EnvVar("TEST_ISO_DATE")
+        test_iso_datetime: datetime = EnvVar("TEST_ISO_DATETIME")
+        test_str_enum: TestStrEnum = EnvVar("TEST_STR_ENUM")
 
     class MyConfig(BaseConfig):
         primitives: PrimitivesConfig
@@ -85,6 +98,9 @@ def test_base_config_fromenv_ok():
     assert str(config.primitives.test_secret) == "******"
     assert config.primitives.test_secret.reveal() == "secret"
     assert config.primitives.test_url == "ws://example.com"
+    assert config.primitives.test_iso_datetime == datetime(2024, 11, 17, 12, 34, 56, 789123)
+    assert config.primitives.test_iso_date == date(2024, 4, 13)
+    assert config.primitives.test_str_enum is TestStrEnum.TEST_VALUE
 
     assert config.test_set == {1, 2, 3}
     assert config.test_custom == ["a", "b", "c"]
@@ -160,6 +176,27 @@ def test_base_config_envvars_ok():
     ]
 
 
+def test_base_config_equal():
+
+    class MyConfig(BaseConfig):
+        x: int
+        y: str
+
+    assert MyConfig(x=1, y="2") == MyConfig(y="2", x=1)
+    assert MyConfig(x=1, y="3") != MyConfig(y="2", x=1)
+
+
+def test_base_config_hash():
+
+    class MyConfig(BaseConfig):
+        x: int
+        y: str
+
+    assert hash(MyConfig(x=1, y="2")) == hash(MyConfig(y="2", x=1))
+    assert MyConfig(x=1, y="2") in {MyConfig(y="2", x=1)}
+    assert MyConfig(x=1, y="3") not in {MyConfig(y="2", x=1)}
+
+
 @patch.dict(envarify.envarify.os.environ, {"X": "25"})
 def test_envvar_exists_ok():
     env_var = _EnvVarSource("x", "X", str)
@@ -188,7 +225,3 @@ def test_envvar_has_value_ok_default(mock):
 def test_envvar_has_value_ok_not(mock):
     env_var = _EnvVarSource("", "", str)
     assert not env_var.has_value()
-
-
-def test_envvar_value():
-    pass

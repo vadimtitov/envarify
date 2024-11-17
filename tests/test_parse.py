@@ -1,4 +1,5 @@
 import typing as t
+from enum import Enum
 from unittest.mock import patch
 
 import pytest
@@ -41,6 +42,9 @@ def test_str_to_dict():
     assert parse._str_to_dict(expected) == expected
 
 
+class MockStrEnum(str, Enum): ...
+
+
 @pytest.mark.parametrize(
     "type_, expected",
     [
@@ -50,6 +54,7 @@ def test_str_to_dict():
         (t.Union[str, None], str),
         (float, float),
         (dict, parse._str_to_dict),
+        (MockStrEnum, MockStrEnum),
     ]
     + (
         [

@@ -1,10 +1,12 @@
 """Type inspection helper."""
 
 import sys
+from datetime import date, datetime
+from enum import Enum
 from typing import Type, Union, get_args, get_origin
 
 if sys.version_info >= (3, 10):
-    from types import NoneType, UnionType  # type: ignore
+    from types import NoneType, UnionType
 else:
     NoneType = type(None)
     UnionType = Union
@@ -21,6 +23,9 @@ SupportedType = Union[
     list,
     set,
     tuple,
+    datetime,
+    date,
+    Enum,
     AnyHttpUrl,
     HttpsUrl,
     HttpUrl,
@@ -66,6 +71,10 @@ class TypeInspector:
             return False
         return len(self.type_args) == 2 and NoneType in self.type_args
 
+    def is_string_enum(self) -> bool:
+        """Check if type is a string enum."""
+        return issubclass(self.origin_type, str) and issubclass(self.origin_type, Enum)
+
     def is_dict(self) -> bool:
         """Check if type is a dictionary."""
         return self.origin_type is dict
@@ -80,9 +89,9 @@ class TypeInspector:
             raise TypeError("Type {} is not nullable".format(self.type))
 
         if self.type_args[0] is NoneType:
-            return self.type_args[1]
+            return self.type_args[1]  # type: ignore
         elif self.type_args[1] is NoneType:
-            return self.type_args[0]
+            return self.type_args[0]  # type: ignore
         else:
             raise TypeError("Type {} is not nullable".format(self.type))
 
