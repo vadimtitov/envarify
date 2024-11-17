@@ -35,7 +35,7 @@ class EnvVar:
 class BaseConfig:
     """Base config class."""
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         """Initialize this object."""
         for key, value in kwargs.items():
             if key not in self._annotations():
@@ -54,7 +54,7 @@ class BaseConfig:
             ),
         )
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Check equality with another instance."""
         if not isinstance(other, BaseConfig):
             return False

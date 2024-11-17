@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from datetime import date, datetime
-from typing import TYPE_CHECKING, Callable, Type
+from typing import TYPE_CHECKING, Any, Callable, Type
 
 from .errors import UnsupportedTypeError
 from .inspect import SupportedType, TypeInspector
@@ -70,7 +70,7 @@ def _str_to_dict(value: str | dict) -> dict:
     if isinstance(value, dict):
         return value
     try:
-        return json.loads(value)
+        return json.loads(value)  # type: ignore
     except json.decoder.JSONDecodeError:
         raise ValueError("Cannot convert to dictionary: " + value)
 
@@ -81,7 +81,7 @@ def _get_sequence_parser(sequence_type: Type, value_type: Type, delimiter: str) 
     except KeyError:
         return None
 
-    def parser(sequence: str):
+    def parser(sequence: str) -> Any:
         return sequence_type(value_parser(value) for value in sequence.split(delimiter))
 
     return parser
