@@ -1,6 +1,7 @@
 """Type inspection helper."""
 
 import sys
+from datetime import date, datetime
 from typing import Type, Union, get_args, get_origin
 
 if sys.version_info >= (3, 10):
@@ -21,6 +22,8 @@ SupportedType = Union[
     list,
     set,
     tuple,
+    datetime,
+    date,
     AnyHttpUrl,
     HttpsUrl,
     HttpUrl,

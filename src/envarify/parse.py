@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from datetime import date, datetime
 from typing import TYPE_CHECKING, Callable, Type
 
 from .errors import UnsupportedTypeError
@@ -87,6 +88,8 @@ _PARSERS: dict[Type[SupportedType], EnvVarParser] = {
     float: float,
     str: str,
     bool: _str_to_bool,
+    datetime: datetime.fromisoformat,
+    date: date.fromisoformat,
     SecretString: SecretString,
     AnyHttpUrl: AnyHttpUrl,
     HttpUrl: HttpUrl,

@@ -1,5 +1,6 @@
 import typing as t
 from dataclasses import dataclass
+from datetime import date, datetime
 from typing import Optional, Union
 from unittest.mock import patch
 
@@ -51,6 +52,8 @@ def test_base_config_repr_ok():
         "TEST_CUSTOM": "a,b,c",
         "TEST_SECRET": "secret",
         "TEST_URL": "ws://example.com",
+        "TEST_ISO_DATE": "2024-04-13",
+        "TEST_ISO_DATETIME": "2024-11-17T12:34:56.789123",
     },
 )
 def test_base_config_fromenv_ok():
@@ -63,6 +66,8 @@ def test_base_config_fromenv_ok():
         test_bool_default: bool = EnvVar("FAKE_BOOL", default=False)
         test_secret: SecretString = EnvVar("TEST_SECRET")
         test_url: Url = EnvVar("TEST_URL")
+        test_iso_date: date = EnvVar("TEST_ISO_DATE")
+        test_iso_datetime: datetime = EnvVar("TEST_ISO_DATETIME")
 
     class MyConfig(BaseConfig):
         primitives: PrimitivesConfig
@@ -85,6 +90,8 @@ def test_base_config_fromenv_ok():
     assert str(config.primitives.test_secret) == "******"
     assert config.primitives.test_secret.reveal() == "secret"
     assert config.primitives.test_url == "ws://example.com"
+    assert config.primitives.test_iso_datetime == datetime(2024, 11, 17, 12, 34, 56, 789123)
+    assert config.primitives.test_iso_date == date(2024, 4, 13)
 
     assert config.test_set == {1, 2, 3}
     assert config.test_custom == ["a", "b", "c"]
