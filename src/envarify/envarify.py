@@ -6,11 +6,13 @@ import inspect
 import os
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Any, Protocol, Type, TypeVar
+from typing import Any, Generic, Protocol, Type, TypeVar, cast
 
 from .errors import AnnotationError, MissingEnvVarsError
 from .inspect import SupportedType, Undefined, UndefinedType
 from .parse import EnvVarParser, get_parser
+
+_T = TypeVar("_T")
 
 
 # Actual return type is _EnvVarSpec but we use Any to help
@@ -32,7 +34,7 @@ def EnvVar(  # noqa: N802
         parse: Custom parse function
         delimiter: Delimiter string. Only applicable for parsing sequences
     """
-    return _EnvVarSpec(
+    return _EnvVarSpec[SupportedType](
         name=name,
         default=default,
         parse=parse,
@@ -179,7 +181,9 @@ class BaseConfig:
                         attr=key,
                         name=key,
                         parse=get_parser(
-                            type_, EnvVar()  # EnvVar() is passed because it has default values
+                            type_,
+                            # EnvVar() is passed because it has default values
+                            cast(_EnvVarSpec[SupportedType], EnvVar()),
                         ),
                     )
                 )
@@ -187,12 +191,12 @@ class BaseConfig:
 
 
 @dataclass(frozen=True)
-class _EnvVarSpec:
+class _EnvVarSpec(Generic[_T]):
     """Environment variable information."""
 
     name: str | None
-    default: SupportedType | None | UndefinedType
-    parse: EnvVarParser | None
+    default: _T | None | UndefinedType
+    parse: EnvVarParser[_T] | None
     delimiter: str
 
 
