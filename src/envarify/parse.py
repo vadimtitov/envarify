@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from datetime import date, datetime
-from typing import TYPE_CHECKING, Any, Callable, Type
+from typing import TYPE_CHECKING, Any, Callable, Type, TypeVar
 
 from .errors import UnsupportedTypeError
 from .inspect import SupportedType, TypeInspector
@@ -17,10 +17,11 @@ if TYPE_CHECKING:
 __all__ = ["get_parser", "EnvVarParser"]
 
 
-EnvVarParser = Callable[[str], SupportedType]
+_T = TypeVar("_T")
+EnvVarParser = Callable[[str], _T]
 
 
-def get_parser(type_: Type, spec: _EnvVarSpec) -> EnvVarParser:
+def get_parser(type_: Type, spec: _EnvVarSpec[SupportedType]) -> EnvVarParser[SupportedType]:
     """Get parser for a given type."""
     ti = TypeInspector(type_, ignore_nullable=True)
 
@@ -87,7 +88,7 @@ def _get_sequence_parser(sequence_type: Type, value_type: Type, delimiter: str) 
     return parser
 
 
-_PARSERS: dict[Type[SupportedType], EnvVarParser] = {
+_PARSERS: dict[Type[SupportedType], EnvVarParser[SupportedType]] = {
     int: int,
     float: float,
     str: str,
