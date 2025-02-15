@@ -11,7 +11,7 @@ from .inspect import SupportedType, TypeInspector
 from .types import AnyHttpUrl, HttpsUrl, HttpUrl, SecretString, Url
 
 if TYPE_CHECKING:
-    from .envarify import EnvVar
+    from .envarify import _EnvVarSpec
 
 
 __all__ = ["get_parser", "EnvVarParser"]
@@ -20,7 +20,7 @@ __all__ = ["get_parser", "EnvVarParser"]
 EnvVarParser = Callable[[str], SupportedType]
 
 
-def get_parser(type_: Type, spec: EnvVar) -> EnvVarParser:
+def get_parser(type_: Type, spec: _EnvVarSpec) -> EnvVarParser:
     """Get parser for a given type."""
     ti = TypeInspector(type_, ignore_nullable=True)
 
