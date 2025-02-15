@@ -19,7 +19,7 @@ _T = TypeVar("_T")
 # type checkers ignore it when assigning to BaseConfig attributes
 def EnvVar(  # noqa: N802
     name: str | None = None,
-    default: SupportedType | None | UndefinedType = Undefined,
+    default: Any = Undefined,
     *,
     parse: EnvVarParser | None = None,
     delimiter: str = ",",
