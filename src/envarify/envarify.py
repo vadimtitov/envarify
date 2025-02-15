@@ -50,7 +50,10 @@ class BaseConfig:
                 raise TypeError("Unexpected keyword argument '{}'".format(key))
             setattr(self, key, value)
 
-        self._key = tuple(sorted(kwargs.items()))
+        self._key = (
+            self.__class__.__name__,
+            *sorted(kwargs.items()),
+        )
 
     def __repr__(self) -> str:
         """Return representation."""

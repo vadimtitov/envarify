@@ -192,8 +192,13 @@ def test_base_config_hash():
         x: int
         y: str
 
+    class NotMyConfig(BaseConfig):
+        x: int
+        y: str
+
     assert hash(MyConfig(x=1, y="2")) == hash(MyConfig(y="2", x=1))
     assert MyConfig(x=1, y="2") in {MyConfig(y="2", x=1)}
+    assert MyConfig(x=1, y="2") not in {NotMyConfig(y="2", x=1)}
     assert MyConfig(x=1, y="3") not in {MyConfig(y="2", x=1)}
 
 
