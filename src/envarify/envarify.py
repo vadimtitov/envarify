@@ -45,12 +45,21 @@ class BaseConfig:
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize this object."""
+        # set provided attributes
         for key, value in kwargs.items():
             if key not in self._annotations():
                 raise TypeError("Unexpected keyword argument '{}'".format(key))
             setattr(self, key, value)
 
-        self._key = tuple(sorted(kwargs.items()))
+        # set default attributes
+        for key, spec in self._properties().items():
+            if isinstance(spec, _EnvVarSpec) and spec.default is not Undefined:
+                setattr(self, key, spec.default)
+
+        self._key = (
+            self.__class__.__name__,
+            *sorted(kwargs.items()),
+        )
 
     def __repr__(self) -> str:
         """Return representation."""

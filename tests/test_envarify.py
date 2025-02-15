@@ -25,12 +25,14 @@ from .const import PYTHON_IS_NEW
 class MyConfig(BaseConfig):
     x: int
     y: str
+    d: str = EnvVar("D", default="default")
 
 
 def test_base_config_init_ok():
     config = MyConfig(x=1, y="2")
     assert config.x == 1
     assert config.y == "2"
+    assert config.d == "default"
 
 
 def test_base_config_init_raises_error():
@@ -39,7 +41,7 @@ def test_base_config_init_raises_error():
 
 
 def test_base_config_repr_ok():
-    assert MyConfig(x=1, y="2").__repr__() == "MyConfig(x=1, y='2')"
+    assert MyConfig(x=1, y="2").__repr__() == "MyConfig(x=1, y='2', d='default')"
 
 
 class TestStrEnum(str, Enum):
@@ -192,8 +194,13 @@ def test_base_config_hash():
         x: int
         y: str
 
+    class NotMyConfig(BaseConfig):
+        x: int
+        y: str
+
     assert hash(MyConfig(x=1, y="2")) == hash(MyConfig(y="2", x=1))
     assert MyConfig(x=1, y="2") in {MyConfig(y="2", x=1)}
+    assert MyConfig(x=1, y="2") not in {NotMyConfig(y="2", x=1)}
     assert MyConfig(x=1, y="3") not in {MyConfig(y="2", x=1)}
 
 
