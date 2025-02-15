@@ -13,8 +13,15 @@ from .inspect import SupportedType, Undefined, UndefinedType
 from .parse import EnvVarParser, get_parser
 
 
-@dataclass(frozen=True)
-class EnvVar:
+# Actual return type is _EnvVarSpec but we use Any to help
+# type checkers ignore it when assigning to BaseConfig attributes
+def EnvVar(  # noqa: N802
+    name: str | None = None,
+    default: SupportedType | None | UndefinedType = Undefined,
+    *,
+    parse: EnvVarParser | None = None,
+    delimiter: str = ",",
+) -> Any:
     """Environment variable specification.
 
     Arguments:
@@ -25,11 +32,12 @@ class EnvVar:
         parse: Custom parse function
         delimiter: Delimiter string. Only applicable for parsing sequences
     """
-
-    name: str | None = None
-    default: SupportedType | None | UndefinedType = Undefined
-    parse: EnvVarParser | None = None
-    delimiter: str = ","
+    return _EnvVarSpec(
+        name=name,
+        default=default,
+        parse=parse,
+        delimiter=delimiter,
+    )
 
 
 class BaseConfig:
@@ -152,11 +160,11 @@ class BaseConfig:
         sources: list[_ValueSource] = []
 
         for key, type_ in cls._annotations().items():
-            spec: EnvVar | None = cls._properties().get(key)
+            spec: _EnvVarSpec | None = cls._properties().get(key)
 
             if inspect.isclass(type_) and issubclass(type_, BaseConfig):
                 sources.append(_BaseConfigSource(attr=key, config_type=type_))
-            elif isinstance(spec, EnvVar):
+            elif isinstance(spec, _EnvVarSpec):
                 sources.append(
                     _EnvVarSource(
                         attr=key,
@@ -176,6 +184,16 @@ class BaseConfig:
                     )
                 )
         return sources
+
+
+@dataclass(frozen=True)
+class _EnvVarSpec:
+    """Environment variable information."""
+
+    name: str | None
+    default: SupportedType | None | UndefinedType
+    parse: EnvVarParser | None
+    delimiter: str
 
 
 _TConfig = TypeVar("_TConfig", bound=BaseConfig)
