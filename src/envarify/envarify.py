@@ -55,7 +55,11 @@ class BaseConfig:
 
         # set default attributes
         for key, spec in self._properties().items():
-            if isinstance(spec, _EnvVarSpec) and spec.default is not Undefined:
+            if (
+                isinstance(spec, _EnvVarSpec)
+                and spec.default is not Undefined
+                and key not in kwargs
+            ):
                 setattr(self, key, spec.default)
 
         self._key = (

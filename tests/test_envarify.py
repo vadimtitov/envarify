@@ -35,6 +35,13 @@ def test_base_config_init_ok():
     assert config.d == "default"
 
 
+def test_base_config_init_ok_default_passed():
+    config = MyConfig(x=1, y="2", d="passed")
+    assert config.x == 1
+    assert config.y == "2"
+    assert config.d == "passed"
+
+
 def test_base_config_init_raises_error():
     with pytest.raises(TypeError):
         MyConfig(z=1)
@@ -71,6 +78,7 @@ def test_base_config_fromenv_ok():
         test_int: int = EnvVar("TEST_INT")
         test_float: float = EnvVar("TEST_FLOAT")
         test_str: str = EnvVar("TEST_STR")
+        test_str_default: str = EnvVar("TEST_STR", default="default")
         test_bool: bool = EnvVar("TEST_BOOL")
         test_bool_default: bool = EnvVar("FAKE_BOOL", default=False)
         test_secret: SecretString = EnvVar("TEST_SECRET")
@@ -95,6 +103,7 @@ def test_base_config_fromenv_ok():
     assert config.primitives.test_int == 666
     assert config.primitives.test_float == 3.14
     assert config.primitives.test_str == "Hello"
+    assert config.primitives.test_str_default == "Hello"
     assert config.primitives.test_bool == True
     assert config.primitives.test_bool_default == False
     assert str(config.primitives.test_secret) == "******"
