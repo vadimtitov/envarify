@@ -135,26 +135,36 @@ class BaseConfig:
     @classmethod
     @lru_cache
     def _properties(cls) -> dict[str, Any]:
-        """Get dictionary containg class properties."""
-        return {
-            k: v
-            for k, v in cls.__dict__.items()
-            if not (
-                k.startswith("__")
-                or isinstance(v, property)
-                or inspect.isfunction(v)
-                or inspect.ismethod(v)
-                or inspect.isdatadescriptor(v)
+        """Get dictionary containing properties from class and all parents."""
+        properties = {}
+        for base_cls in reversed(cls.__mro__[:-2]):  # skip object and BaseConfig
+            properties.update(
+                {
+                    k: v
+                    for k, v in base_cls.__dict__.items()
+                    if not (
+                        k.startswith("__")
+                        or isinstance(v, property)
+                        or inspect.isfunction(v)
+                        or inspect.ismethod(v)
+                        or inspect.isdatadescriptor(v)
+                    )
+                }
             )
-        }
+        return properties
 
     @classmethod
     def _annotations(cls) -> dict[str, Type]:
-        """Get dictionary containg class properties."""
-        if not hasattr(cls, "__annotations__"):
+        """Collect annotations from the class and all its base classes."""
+        annotations = {}
+        for base_cls in reversed(cls.__mro__[:-2]):  # skip object and BaseConfig
+            if hasattr(base_cls, "__annotations__"):
+                annotations.update(base_cls.__annotations__)
+
+        if not annotations:
             raise AnnotationError("Subclass must have annotated properties")
 
-        return cls.__annotations__
+        return annotations
 
     @classmethod
     @lru_cache

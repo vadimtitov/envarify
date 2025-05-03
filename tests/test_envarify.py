@@ -28,6 +28,22 @@ class MyConfig(BaseConfig):
     d: str = EnvVar("D", default="default")
 
 
+class ChildConfig(MyConfig):
+
+    child: int = EnvVar("CHILD")
+    child_default: str = EnvVar("CHILD_DEFAULT", default="child default")
+
+
+def test_base_config_inheritance():
+
+    config = ChildConfig(x=1, y="2", child=123)
+    assert config.x == 1
+    assert config.y == "2"
+    assert config.d == "default"
+    assert config.child == 123
+    assert config.child_default == "child default"
+
+
 def test_base_config_init_ok():
     config = MyConfig(x=1, y="2")
     assert config.x == 1
@@ -70,6 +86,7 @@ class TestStrEnum(str, Enum):
         "TEST_ISO_DATE": "2024-04-13",
         "TEST_ISO_DATETIME": "2024-11-17T12:34:56.789123",
         "TEST_STR_ENUM": "TEST_STR_ENUM_VALUE",
+        "CHILD": "123",
     },
 )
 def test_base_config_fromenv_ok():
@@ -99,7 +116,11 @@ def test_base_config_fromenv_ok():
         def custom_property(self) -> str:
             return "Custom " + self.primitives.test_str
 
-    config = MyConfig.fromenv()
+    class FinalConfig(MyConfig):
+        child: int = EnvVar("CHILD")
+        child_default: str = EnvVar("CHILD_DEFAULT", default="child default")
+
+    config = FinalConfig.fromenv()
     assert config.primitives.test_int == 666
     assert config.primitives.test_float == 3.14
     assert config.primitives.test_str == "Hello"
@@ -117,6 +138,9 @@ def test_base_config_fromenv_ok():
     assert config.test_custom == ["a", "b", "c"]
     assert config.custom_method() == 6660
     assert config.custom_property == "Custom Hello"
+
+    assert config.child == 123
+    assert config.child_default == "child default"
 
 
 @patch.dict(envarify.envarify.os.environ, {"XXX": "666"})
