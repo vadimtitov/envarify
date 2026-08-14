@@ -12,7 +12,7 @@ from .errors import AnnotationError, MissingEnvVarsError
 from .inspect import SupportedType, Undefined, UndefinedType
 from .parse import EnvVarParser, get_parser
 
-_T = TypeVar("_T")
+_T = TypeVar("_T")  # noqa: N808
 
 
 # Actual return type is _EnvVarSpec but we use Any to help

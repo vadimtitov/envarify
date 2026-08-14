@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 __all__ = ["get_parser", "EnvVarParser"]
 
 
-_T = TypeVar("_T")
+_T = TypeVar("_T")  # noqa: N808
 EnvVarParser = Callable[[str], _T]
 
 
