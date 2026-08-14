@@ -154,12 +154,25 @@ class BaseConfig:
         return properties
 
     @classmethod
+    @lru_cache
     def _annotations(cls) -> dict[str, Type]:
-        """Collect annotations from the class and all its base classes."""
+        """Collect annotations from the class and all its base classes.
+
+        String annotations (PEP 563 / `from __future__ import annotations`)
+        are evaluated against each base class' own module namespace.
+        """
         annotations = {}
         for base_cls in reversed(cls.__mro__[:-2]):  # skip object and BaseConfig
-            if hasattr(base_cls, "__annotations__"):
-                annotations.update(base_cls.__annotations__)
+            try:
+                annotations.update(inspect.get_annotations(base_cls, eval_str=True))
+            except NameError as e:
+                raise AnnotationError(
+                    "Cannot resolve annotation {name!r} on {cls}: "
+                    "make sure it is defined or imported at runtime "
+                    "(not only under 'if TYPE_CHECKING:')".format(
+                        name=e.name, cls=base_cls.__name__
+                    )
+                ) from e
 
         if not annotations:
             raise AnnotationError("Subclass must have annotated properties")
