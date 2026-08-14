@@ -156,11 +156,7 @@ class BaseConfig:
     @classmethod
     @lru_cache
     def _annotations(cls) -> dict[str, Type]:
-        """Collect annotations from the class and all its base classes.
-
-        String annotations (PEP 563 / `from __future__ import annotations`)
-        are evaluated against each base class' own module namespace.
-        """
+        """Collect annotations from the class and all its base classes."""
         annotations = {}
         for base_cls in reversed(cls.__mro__[:-2]):  # skip object and BaseConfig
             try:
